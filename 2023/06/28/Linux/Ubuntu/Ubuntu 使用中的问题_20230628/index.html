@@ -1,0 +1,223 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Ubuntu 使用中的问题 | Yongz丶</title><meta name="author" content="Yongz丶"><meta name="copyright" content="Yongz丶"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="最近搭环境，Ubuntu 老是出现问题，写个文章记录一下。  Ubuntu Root 用户无法登录前期提要 Linux 版本：Ubuntu 20.02 已进行如下配置： apt 源已更新 root 用户密码已更改    解决措施 当在登录界面使用 root 账户登录时，显示登录失败字样。  经过百度寻找，得出以下解决方案：  登录普通用户界面，使用su root切换到 root 账户； 编辑&#x2F;e">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ubuntu 使用中的问题">
+<meta property="og:url" content="https://y0n9zh.github.io/2023/06/28/Linux/Ubuntu/Ubuntu%20%E4%BD%BF%E7%94%A8%E4%B8%AD%E7%9A%84%E9%97%AE%E9%A2%98_20230628/index.html">
+<meta property="og:site_name" content="Yongz丶">
+<meta property="og:description" content="最近搭环境，Ubuntu 老是出现问题，写个文章记录一下。  Ubuntu Root 用户无法登录前期提要 Linux 版本：Ubuntu 20.02 已进行如下配置： apt 源已更新 root 用户密码已更改    解决措施 当在登录界面使用 root 账户登录时，显示登录失败字样。  经过百度寻找，得出以下解决方案：  登录普通用户界面，使用su root切换到 root 账户； 编辑&#x2F;e">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://y0n9zh.github.io/img/page_img/page_img13.jpg">
+<meta property="article:published_time" content="2023-06-28T01:52:04.000Z">
+<meta property="article:modified_time" content="2023-08-31T16:00:05.658Z">
+<meta property="article:author" content="Yongz丶">
+<meta property="article:tag" content="Ubuntu">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://y0n9zh.github.io/img/page_img/page_img13.jpg"><link rel="shortcut icon" href="/./img/favicon.png"><link rel="canonical" href="https://y0n9zh.github.io/2023/06/28/Linux/Ubuntu/Ubuntu%20%E4%BD%BF%E7%94%A8%E4%B8%AD%E7%9A%84%E9%97%AE%E9%A2%98_20230628/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: {"limitCount":30,"languages":{"author":"作者: Yongz丶","link":"链接: ","source":"来源: Yongz丶","info":"著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。"}},
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Ubuntu 使用中的问题',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-09-01 00:00:05'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/./img/avatar.png" onerror="onerror=null;src='/img/default_cover2.png'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">7</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fas fa-archive"></i><span> 文章</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fa-solid fa-calendar-week"></i><span> 分类</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E9%9A%8F%E7%AC%94/"><i class="fa-fw fa-solid fa-book"></i><span> 随笔</span></a></li><li><a class="site-page child" href="/categories/Linux/"><i class="fa-fw fa-brands fa-linux"></i><span> Linux</span></a></li><li><a class="site-page child" href="/categories/Docker/"><i class="fa-fw fa-brands fa-docker"></i><span> Docker</span></a></li><li><a class="site-page child" href="/categories/Vulhub/"><i class="fa-fw fa-solid fa-bath"></i><span> Vulhub</span></a></li><li><a class="site-page child" href="/categories/Vulnhub-Kali/"><i class="fa-fw fa-solid fa-bomb"></i><span> Vulnhub_Kali</span></a></li></ul></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fa-solid fa-screwdriver-wrench"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/Tools/WebStackPage/"><i class="fa-fw fa-solid fa-compass"></i><span> 网址导航</span></a></li><li><a class="site-page child" href="/Tools/CyberChef/"><i class="fa-fw fa-solid fa-hippo"></i><span> CyberChef</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/./img/page_img/page_img13.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="Yongz丶"><span class="site-name">Yongz丶</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fas fa-archive"></i><span> 文章</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fa-solid fa-calendar-week"></i><span> 分类</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/categories/%E9%9A%8F%E7%AC%94/"><i class="fa-fw fa-solid fa-book"></i><span> 随笔</span></a></li><li><a class="site-page child" href="/categories/Linux/"><i class="fa-fw fa-brands fa-linux"></i><span> Linux</span></a></li><li><a class="site-page child" href="/categories/Docker/"><i class="fa-fw fa-brands fa-docker"></i><span> Docker</span></a></li><li><a class="site-page child" href="/categories/Vulhub/"><i class="fa-fw fa-solid fa-bath"></i><span> Vulhub</span></a></li><li><a class="site-page child" href="/categories/Vulnhub-Kali/"><i class="fa-fw fa-solid fa-bomb"></i><span> Vulnhub_Kali</span></a></li></ul></div><div class="menus_item"><a class="site-page group hide" href="javascript:void(0);"><i class="fa-fw fa-solid fa-screwdriver-wrench"></i><span> 工具</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/Tools/WebStackPage/"><i class="fa-fw fa-solid fa-compass"></i><span> 网址导航</span></a></li><li><a class="site-page child" href="/Tools/CyberChef/"><i class="fa-fw fa-solid fa-hippo"></i><span> CyberChef</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Ubuntu 使用中的问题</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="fa-fw post-meta-icon far fa-calendar-alt"></i><span class="post-meta-label">发表于</span><time datetime="2023-06-28T01:52:04.000Z" title="发表于 2023-06-28 09:52:04">2023-06-28</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Linux/">Linux</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">357</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>1分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="Ubuntu 使用中的问题"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><ul>
+<li>最近搭环境，Ubuntu 老是出现问题，写个文章记录一下。</li>
+</ul>
+<h1 id="Ubuntu-Root-用户无法登录"><a href="#Ubuntu-Root-用户无法登录" class="headerlink" title="Ubuntu Root 用户无法登录"></a>Ubuntu Root 用户无法登录</h1><h2 id="前期提要"><a href="#前期提要" class="headerlink" title="前期提要"></a>前期提要</h2><ul>
+<li>Linux 版本：Ubuntu 20.02</li>
+<li>已进行如下配置：<ul>
+<li>apt 源已更新</li>
+<li>root 用户密码已更改</li>
+</ul>
+</li>
+</ul>
+<h2 id="解决措施"><a href="#解决措施" class="headerlink" title="解决措施"></a>解决措施</h2><ul>
+<li>当在登录界面使用 root 账户登录时，显示登录失败字样。 </li>
+<li>经过百度寻找，得出以下解决方案： <ol>
+<li>登录普通用户界面，使用<code>su root</code>切换到 root 账户；</li>
+<li>编辑<code>/etc/pam.d/gdm-autologin</code>：<code>vim /etc/pam.d/gdm-autologin</code>。</li>
+<li>将上述文件的第三行<code>auth required pam_succeed_if.so user!=root quiet_success</code>进行注释，保存退出；</li>
+<li>编辑<code>/etc/pam.d/gdm-password</code>：<code>vim /etc/pam.d/gdm-password</code>；</li>
+<li>将上述文件的第三行<code>auth required pam_succeed_if.so user!=root quiet_success</code>进行注释，保存退出；</li>
+<li>编辑<code>/root/.profile</code>：<code>vim /root/.profile</code>；</li>
+<li>将上述文件的最后几行改为：<code>tty -s&amp;&amp;mesg n 2 &gt; /dev/null || true</code>，保存退出；</li>
+<li>重启即可</li>
+</ol>
+</li>
+<li>写个脚本多快：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">sed -i &#x27;3d&#x27; /etc/pam.d/gdm-autologin</span><br><span class="line">sed -i &#x27;3d&#x27; /etc/pam.d/gdm-password</span><br><span class="line"></span><br><span class="line">sed -i &#x27;9d&#x27; /root/.profile</span><br><span class="line">echo &quot;tty -s&amp;&amp;mesg n 2 &gt; /dev/null || true&quot; &gt;&gt; /root/.profile</span><br><span class="line">echo &quot;PermitRootLogin yes&quot; &gt;&gt; /etc/ssh/sshd_config</span><br><span class="line"></span><br><span class="line">apt install -y net-tools lrzsz</span><br><span class="line"></span><br><span class="line">shutdown -r now</span><br></pre></td></tr></table></figure>
+
+<h1 id="Ubuntu-关机巨慢"><a href="#Ubuntu-关机巨慢" class="headerlink" title="Ubuntu 关机巨慢"></a>Ubuntu 关机巨慢</h1><h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><ul>
+<li>虚拟机中 ubuntu18.04 关机慢，显示如下：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230831235928143.png" alt="image-20230831235928143"></p>
+<h2 id="解决措施-1"><a href="#解决措施-1" class="headerlink" title="解决措施"></a>解决措施</h2><ul>
+<li>修改系统配置文件：<code>/etc/systemd/system.conf</code>。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">默认配置如下</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">DefaultTimeoutStartSec=90s</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">DefaultTimeoutStopSec=90s</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">修改后如下</span></span><br><span class="line"></span><br><span class="line">DefaultTimeoutStartSec=3s</span><br><span class="line">DefaultTimeoutStopSec=3s</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重载配置</span></span><br><span class="line"></span><br><span class="line">sudo systemctl daemon-reload</span><br></pre></td></tr></table></figure>
+
+
+
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="Yongz丶">Yongz丶</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://y0n9zh.github.io/2023/06/28/Linux/Ubuntu/Ubuntu%20%E4%BD%BF%E7%94%A8%E4%B8%AD%E7%9A%84%E9%97%AE%E9%A2%98_20230628/">https://y0n9zh.github.io/2023/06/28/Linux/Ubuntu/Ubuntu%20%E4%BD%BF%E7%94%A8%E4%B8%AD%E7%9A%84%E9%97%AE%E9%A2%98_20230628/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://y0n9zh.github.io" target="_blank">Yongz丶</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Ubuntu/">Ubuntu</a><a class="post-meta__tags" href="/tags/Linux/">Linux</a></div><div class="post_share"><div class="social-share" data-image="/./img/page_img/page_img13.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i> 打赏</div><div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="/./img/wechat.jpg" target="_blank"><img class="post-qr-code-img" src="/./img/wechat.jpg" alt="Wechat"/></a><div class="post-qr-code-desc">Wechat</div></li><li class="reward-item"><a href="/./img/alipay.jpg" target="_blank"><img class="post-qr-code-img" src="/./img/alipay.jpg" alt="Alipay"/></a><div class="post-qr-code-desc">Alipay</div></li></ul></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2023/06/29/%E9%9A%8F%E7%AC%94/01.%E6%8F%90%E9%97%AE%E7%9A%84%E8%89%BA%E6%9C%AF_20230629/" title="提问的艺术"><img class="cover" src="/./img/page_img/page_img1.jpg" onerror="onerror=null;src='/img/default_cover2.png'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">提问的艺术</div></div></a></div><div class="next-post pull-right"><a href="/2023/06/25/Linux/Kali/Kali%20%E4%B8%AA%E6%80%A7%E5%8C%96%E9%85%8D%E7%BD%AE_20230625/" title="Kali 个性化配置"><img class="cover" src="/./img/page_img/page_img12.jpg" onerror="onerror=null;src='/img/default_cover2.png'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Kali 个性化配置</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/06/25/Linux/Kali/Kali%20%E4%B8%AA%E6%80%A7%E5%8C%96%E9%85%8D%E7%BD%AE_20230625/" title="Kali 个性化配置"><img class="cover" src="/./img/page_img/page_img12.jpg" alt="cover"><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-06-25</div><div class="title">Kali 个性化配置</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/./img/avatar.png" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="avatar"/></div><div class="author-info__name">Yongz丶</div><div class="author-info__description">人生在世，是不太需要他人建议的，亲身经历之后才会明白。</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">7</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/Y0n9zh?tab=repositories" target="_blank" title="Github"><i class="fab fa-github" style="color: #000000;"></i></a><a class="social-icon" href="mailto:y0n9zh@gmail.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #000000;"></i></a><a class="social-icon" href="https://www.yuque.com/yongz" target="_blank" title="Yueque"><i class="fa-solid fa-paperclip" style="color: #000000;"></i></a><a class="social-icon" href="https://music.163.com/#/user/home?id=252561863" target="_blank" title="Music"><i class="fa-solid fa-record-vinyl" style="color: #000000;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">不定时分享一些内容，有想要看的可以找我交流哦~</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content is-expand"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Ubuntu-Root-%E7%94%A8%E6%88%B7%E6%97%A0%E6%B3%95%E7%99%BB%E5%BD%95"><span class="toc-number">1.</span> <span class="toc-text">Ubuntu Root 用户无法登录</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E6%9C%9F%E6%8F%90%E8%A6%81"><span class="toc-number">1.1.</span> <span class="toc-text">前期提要</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%8E%AA%E6%96%BD"><span class="toc-number">1.2.</span> <span class="toc-text">解决措施</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Ubuntu-%E5%85%B3%E6%9C%BA%E5%B7%A8%E6%85%A2"><span class="toc-number">2.</span> <span class="toc-text">Ubuntu 关机巨慢</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E6%8F%8F%E8%BF%B0"><span class="toc-number">2.1.</span> <span class="toc-text">问题描述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%8E%AA%E6%96%BD-1"><span class="toc-number">2.2.</span> <span class="toc-text">解决措施</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2023/08/17/Docker/Docker%20%E5%AE%B9%E5%99%A8%E8%87%AA%E5%90%AF%E5%8A%A8_20230817/" title="Docker 容器自启动"><img src="/./img/page_img/page_img14.jpg" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="Docker 容器自启动"/></a><div class="content"><a class="title" href="/2023/08/17/Docker/Docker%20%E5%AE%B9%E5%99%A8%E8%87%AA%E5%90%AF%E5%8A%A8_20230817/" title="Docker 容器自启动">Docker 容器自启动</a><time datetime="2023-08-17T09:52:04.000Z" title="发表于 2023-08-17 17:52:04">2023-08-17</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/07/29/Docker/Docker%20%E7%9A%84%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8_20230729/" title="Docker的简单使用"><img src="/./img/page_img/page_img2.jpg" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="Docker的简单使用"/></a><div class="content"><a class="title" href="/2023/07/29/Docker/Docker%20%E7%9A%84%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8_20230729/" title="Docker的简单使用">Docker的简单使用</a><time datetime="2023-07-29T01:25:25.000Z" title="发表于 2023-07-29 09:25:25">2023-07-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/06/29/%E9%9A%8F%E7%AC%94/01.%E6%8F%90%E9%97%AE%E7%9A%84%E8%89%BA%E6%9C%AF_20230629/" title="提问的艺术"><img src="/./img/page_img/page_img1.jpg" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="提问的艺术"/></a><div class="content"><a class="title" href="/2023/06/29/%E9%9A%8F%E7%AC%94/01.%E6%8F%90%E9%97%AE%E7%9A%84%E8%89%BA%E6%9C%AF_20230629/" title="提问的艺术">提问的艺术</a><time datetime="2023-06-28T16:42:13.000Z" title="发表于 2023-06-29 00:42:13">2023-06-29</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/06/28/Linux/Ubuntu/Ubuntu%20%E4%BD%BF%E7%94%A8%E4%B8%AD%E7%9A%84%E9%97%AE%E9%A2%98_20230628/" title="Ubuntu 使用中的问题"><img src="/./img/page_img/page_img13.jpg" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="Ubuntu 使用中的问题"/></a><div class="content"><a class="title" href="/2023/06/28/Linux/Ubuntu/Ubuntu%20%E4%BD%BF%E7%94%A8%E4%B8%AD%E7%9A%84%E9%97%AE%E9%A2%98_20230628/" title="Ubuntu 使用中的问题">Ubuntu 使用中的问题</a><time datetime="2023-06-28T01:52:04.000Z" title="发表于 2023-06-28 09:52:04">2023-06-28</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2023/06/25/Linux/Kali/Kali%20%E4%B8%AA%E6%80%A7%E5%8C%96%E9%85%8D%E7%BD%AE_20230625/" title="Kali 个性化配置"><img src="/./img/page_img/page_img12.jpg" onerror="this.onerror=null;this.src='/img/default_cover2.png'" alt="Kali 个性化配置"/></a><div class="content"><a class="title" href="/2023/06/25/Linux/Kali/Kali%20%E4%B8%AA%E6%80%A7%E5%8C%96%E9%85%8D%E7%BD%AE_20230625/" title="Kali 个性化配置">Kali 个性化配置</a><time datetime="2023-06-25T00:52:04.000Z" title="发表于 2023-06-25 08:52:04">2023-06-25</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/./img/page_img/page_img13.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2023 By Yongz丶</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text">Actions speak louder than words.</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><script>function panguFn () {
+  if (typeof pangu === 'object') pangu.autoSpacingPage()
+  else {
+    getScript('https://cdn.jsdelivr.net/npm/pangu/dist/browser/pangu.min.js')
+      .then(() => {
+        pangu.autoSpacingPage()
+      })
+  }
+}
+
+function panguInit () {
+  if (false){
+    GLOBAL_CONFIG_SITE.isPost && panguFn()
+  } else {
+    panguFn()
+  }
+}
+
+document.addEventListener('DOMContentLoaded', panguInit)</script><div class="js-pjax"></div><script defer="defer" id="fluttering_ribbon" mobile="false" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/canvas-fluttering-ribbon.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
